@@ -15,6 +15,17 @@ class CommercialDataSeeder extends Seeder
     public function run(): void
     {
         // 1. Usuarios Principales
+        $vaneAdmin = User::updateOrCreate(
+            ['email' => 'vaneadmin@ldrcomercial.com'],
+            [
+                'name' => 'Administradora Vane',
+                'password' => bcrypt('agosto06@'),
+                'role' => 'admin',
+                'phone' => '+59170000000',
+                'email_verified_at' => now(),
+            ]
+        );
+
         $admin = User::updateOrCreate(
             ['email' => 'admin@ldrcomercial.com'],
             [
@@ -22,6 +33,7 @@ class CommercialDataSeeder extends Seeder
                 'password' => bcrypt('password123'),
                 'role' => 'admin',
                 'phone' => '+59170000000',
+                'email_verified_at' => now(),
             ]
         );
 

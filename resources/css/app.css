@@ -1,3 +1,39 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ═════════════════════════════════════════════════════════════════════════════════════
+   ESTILOS GLOBALES: CUADROS DE TEXTO CON LETRAS OSCURAS Y 100% LEGIBLES AL ESCRIBIR
+   ═════════════════════════════════════════════════════════════════════════════════════ */
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]),
+textarea,
+select {
+    color: #0f172a !important; /* Letras oscuras (slate-900 / negro legible) */
+    -webkit-text-fill-color: #0f172a !important; /* Compatibilidad completa Chrome, Edge, Safari */
+    background-color: #ffffff !important; /* Fondo blanco de alto contraste */
+    caret-color: #ea580c !important; /* Cursor de texto visible en naranja LDR */
+    border-color: #cbd5e1 !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="file"]):focus,
+textarea:focus,
+select:focus {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    background-color: #ffffff !important;
+    border-color: #f97316 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.25) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b !important;
+    opacity: 1 !important;
+}
+
+select option {
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+}

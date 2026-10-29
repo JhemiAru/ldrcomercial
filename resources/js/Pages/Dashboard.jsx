@@ -1,9 +1,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard({ company, stats, recentProducts = [], recentEvents = [] }) {
+    const { auth } = usePage().props;
     // ═══════════════════════════════════════════════
     // SLIDER / CARRUSEL INTERACTIVO DEL DASHBOARD
     // ═══════════════════════════════════════════════
@@ -95,6 +96,22 @@ export default function Dashboard({ company, stats, recentProducts = [], recentE
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {auth?.user?.role === 'admin' && (
+                            <Link
+                                href={route('admin.companies.index')}
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black rounded-xl shadow-xs transition"
+                            >
+                                <span>🔑</span>
+                                <span>Cuentas de Compañías</span>
+                            </Link>
+                        )}
+                        <Link
+                            href={route('sales.index')}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20 text-xs font-bold rounded-xl shadow-xs transition"
+                        >
+                            <span>📋</span>
+                            <span>Ventas & Cotizaciones</span>
+                        </Link>
                         <Link
                             href={route('products.create')}
                             className="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-black rounded-xl shadow-xs transition"

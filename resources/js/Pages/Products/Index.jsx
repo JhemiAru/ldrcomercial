@@ -75,7 +75,7 @@ export default function ProductIndex({ hasCompany, company, products, filters = 
                         <form onSubmit={handleSearch} className="flex gap-2 w-full sm:w-96">
                             <input
                                 type="text"
-                                className="w-full text-sm rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                className="w-full text-sm rounded-lg border-gray-300 bg-white text-slate-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
                                 placeholder="Buscar por nombre o código SKU..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}

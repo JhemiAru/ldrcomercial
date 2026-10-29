@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\CompanyAccountController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SalesController;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Event;
@@ -118,6 +120,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Gestión de Eventos y Promociones
     Route::resource('events', EventController::class);
+
+    // Gestión de Ventas y Cotizaciones
+    Route::get('/ventas-cotizaciones', [SalesController::class, 'index'])->name('sales.index');
+
+    // Panel Administrador: Gestión de Cuentas de Compañías & Restablecimiento de Contraseñas
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/companies', [CompanyAccountController::class, 'index'])->name('companies.index');
+        Route::post('/users/{user}/reset-password', [CompanyAccountController::class, 'resetPassword'])->name('users.reset-password');
+        Route::post('/companies/{company}/toggle-verification', [CompanyAccountController::class, 'toggleVerification'])->name('companies.toggle-verification');
+    });
 
     // Perfil de Usuario
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
