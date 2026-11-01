@@ -59,6 +59,7 @@ class CompanyAccountController extends Controller
         return Inertia::render('Admin/Companies/Index', [
             'companies' => $companies,
             'usersWithoutCompany' => $usersWithoutCompany,
+            'categories' => \App\Models\Category::where('is_active', true)->get(),
             'stats' => $stats,
             'filters' => $request->only(['search']),
         ]);
@@ -107,6 +108,60 @@ class CompanyAccountController extends Controller
         $statusText = $company->is_verified ? 'Verificada con Insignia ✓' : 'No verificada';
 
         return back()->with('success', "La empresa {$company->name} ahora está como: {$statusText}.");
+    }
+
+    /**
+     * Registra manualmente una nueva empresa y su usuario de acceso tras
+     * la verificación presencial y de documentos realizada por el equipo comercial.
+     */
+    public function store(Request $request)
+    {
+        $currentUser = $request->user();
+
+        if (!$currentUser || !$currentUser->isAdmin()) {
+            abort(403, 'Acceso denegado.');
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:6'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'company_name' => ['required', 'string', 'max:255'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'tax_id' => ['nullable', 'string', 'max:50'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'address' => ['nullable', 'string', 'max:255'],
+        ], [
+            'email.unique' => 'Ya existe un usuario con este correo electrónico.',
+            'company_name.required' => 'El nombre de la empresa es obligatorio.',
+            'category_id.required' => 'Debes seleccionar una categoría.',
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'company',
+            'phone' => $validated['phone'] ?? null,
+        ]);
+
+        $company = Company::create([
+            'user_id' => $user->id,
+            'category_id' => $validated['category_id'],
+            'name' => $validated['company_name'],
+            'slug' => \Illuminate\Support\Str::slug($validated['company_name']) . '-' . uniqid(),
+            'tax_id' => $validated['tax_id'] ?? null,
+            'city' => $validated['city'] ?? 'Bolivia',
+            'address' => $validated['address'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'whatsapp' => $validated['phone'] ?? null,
+            'email' => $validated['email'],
+            'is_verified' => true,
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', "¡Empresa '{$company->name}' registrada exitosamente como VERIFICADA con acceso para {$user->email}!");
     }
 }
 

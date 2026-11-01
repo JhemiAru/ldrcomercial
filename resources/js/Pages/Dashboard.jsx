@@ -3,7 +3,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function Dashboard({ company, stats, recentProducts = [], recentEvents = [] }) {
+export default function Dashboard({ company, companies = [], stats, recentProducts = [], recentEvents = [] }) {
     const { auth } = usePage().props;
     // ═══════════════════════════════════════════════
     // SLIDER / CARRUSEL INTERACTIVO DEL DASHBOARD
@@ -81,21 +81,33 @@ export default function Dashboard({ company, stats, recentProducts = [], recentE
                     <div>
                         <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 transition-colors">
                             <span>Panel de Control</span>
-                            {company?.is_verified && (
+                            {company?.is_verified ? (
                                 <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 dark:text-blue-400 bg-blue-100/80 dark:bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-500/20">
                                     <svg className="w-3.5 h-3.5 fill-blue-600 dark:fill-blue-400" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                     </svg>
-                                    Verificada
+                                    Empresa Verificada
+                                </span>
+                            ) : company ? (
+                                <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-500/30">
+                                    ⏳ En Verificación
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/10 px-2.5 py-0.5 rounded-full">
+                                    👤 Usuario Comprador
                                 </span>
                             )}
                         </h1>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 transition-colors">
-                            Bienvenido a la gestión comercial de <strong className="text-slate-700 dark:text-white">{company?.name || 'tu negocio'}</strong>
+                            {company ? (
+                                <>Gestión comercial de <strong className="text-slate-700 dark:text-white">{company.name}</strong></>
+                            ) : (
+                                <>Bienvenido(a) a tu panel personal, <strong className="text-slate-700 dark:text-white">{auth?.user?.name}</strong></>
+                            )}
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         {auth?.user?.role === 'admin' && (
                             <Link
                                 href={route('admin.companies.index')}
@@ -107,25 +119,46 @@ export default function Dashboard({ company, stats, recentProducts = [], recentE
                         )}
                         <Link
                             href={route('sales.index')}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20 text-xs font-bold rounded-xl shadow-xs transition"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 text-xs font-bold rounded-xl shadow-xs transition"
                         >
                             <span>📋</span>
-                            <span>Ventas & Cotizaciones</span>
+                            <span>Cotizaciones</span>
                         </Link>
-                        <Link
-                            href={route('products.create')}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-black rounded-xl shadow-xs transition"
-                        >
-                            <span>+</span>
-                            <span>Nuevo Producto</span>
-                        </Link>
-                        <Link
-                            href={route('company.edit')}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 text-xs font-bold rounded-xl shadow-xs transition"
-                        >
-                            <span>🏢</span>
-                            <span>Editar Empresa</span>
-                        </Link>
+
+                        {company?.is_verified ? (
+                            <>
+                                <Link
+                                    href={route('products.create')}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-xs transition"
+                                >
+                                    <span>+</span>
+                                    <span>Nuevo Producto</span>
+                                </Link>
+                                <Link
+                                    href={route('company.edit')}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 text-xs font-bold rounded-xl shadow-xs transition"
+                                >
+                                    <span>🏢</span>
+                                    <span>Editar Empresa</span>
+                                </Link>
+                            </>
+                        ) : company ? (
+                            <Link
+                                href={route('company.edit')}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl shadow-xs transition"
+                            >
+                                <span>🏢</span>
+                                <span>Revisar Datos de Empresa</span>
+                            </Link>
+                        ) : (
+                            <Link
+                                href={route('company.edit')}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-xs transition"
+                            >
+                                <span>+</span>
+                                <span>Afiliar mi Negocio</span>
+                            </Link>
+                        )}
                     </div>
                 </div>
             }
@@ -133,6 +166,73 @@ export default function Dashboard({ company, stats, recentProducts = [], recentE
             <Head title="Panel de Control - LDR Comercial" />
 
             <div className="space-y-6">
+
+                {/* TARJETA INFORMATIVA: USUARIO SIN EMPRESA */}
+                {!company && (
+                    <div className="p-6 rounded-3xl bg-white dark:bg-[#0b132b] border border-slate-200/90 dark:border-white/10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="space-y-2">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-black uppercase tracking-wider">
+                                <span>👤</span>
+                                <span>Cuenta de Usuario Personal</span>
+                            </div>
+                            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                                ¿Eres propietario de un negocio o empresa en Bolivia?
+                            </h2>
+                            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
+                                Puedes vincular y administrar uno o varios negocios desde tu cuenta de usuario. Para garantizar un ecosistema B2B confiable y libre de estafas, nuestro equipo comercial coordinará una visita presencial y verificación documental antes de habilitar tus publicaciones.
+                            </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full md:w-auto">
+                            <Link
+                                href={route('company.edit')}
+                                className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md shadow-blue-500/20 text-center transition"
+                            >
+                                + Afiliar mi Empresa
+                            </Link>
+                            <Link
+                                href={route('home')}
+                                className="w-full sm:w-auto px-5 py-3 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 text-slate-800 dark:text-white font-bold text-xs rounded-xl text-center transition"
+                            >
+                                Explorar Catálogo
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
+                {/* TARJETA INFORMATIVA: EMPRESA EN PROCESO DE VERIFICACIÓN */}
+                {company && !company.is_verified && (
+                    <div className="p-6 rounded-3xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="space-y-2">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-black uppercase tracking-wider">
+                                <span>⏳</span>
+                                <span>Empresa Registrada: {company.name} — En Proceso de Verificación</span>
+                            </div>
+                            <h3 className="text-lg sm:text-xl font-black text-amber-950 dark:text-amber-100">
+                                Tu empresa requiere verificación presencial para poder publicar productos
+                            </h3>
+                            <p className="text-xs text-amber-800 dark:text-amber-200 max-w-2xl leading-relaxed">
+                                Por política estricta de seguridad y prevención de estafas, el equipo comercial de LDR debe verificar tu local físico y papeles al día (NIT y licencia) antes de habilitar tu catálogo al público.
+                            </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full md:w-auto">
+                            <a
+                                href={`https://wa.me/59170000000?text=${encodeURIComponent(`Hola equipo comercial de LDR Comercial, mi empresa "${company.name}" está registrada y deseo coordinar la visita presencial de verificación.`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2"
+                            >
+                                <span>📲</span>
+                                <span>Coordinar Visita por WhatsApp</span>
+                            </a>
+                            <Link
+                                href={route('company.edit')}
+                                className="w-full sm:w-auto px-4 py-3 bg-white dark:bg-white/10 text-slate-700 dark:text-white font-bold text-xs rounded-xl border border-amber-300 text-center transition"
+                            >
+                                Editar Datos
+                            </Link>
+                        </div>
+                    </div>
+                )}
 
                 {/* SLIDER PRINCIPAL */}
                 <div className="relative overflow-hidden rounded-3xl bg-slate-900 dark:bg-[#0b132b] text-white shadow-xl shadow-slate-900/10 dark:shadow-slate-900/50 border border-slate-800 dark:border-white/5 transition-colors">

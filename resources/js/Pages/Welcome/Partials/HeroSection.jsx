@@ -94,10 +94,10 @@ export default function HeroSection({ categories, featuredProducts, promotionalP
                                     Encuentra precios reales, promociones y contacta directamente con las empresas sin intermediarios.
                                 </p>
                                 <Link 
-                                    href={route('register')} 
+                                    href={route('afiliacion')} 
                                     className="inline-block bg-rose-500 hover:bg-rose-600 text-white px-8 py-3.5 rounded-lg font-black uppercase tracking-wider text-xs transition shadow-lg shadow-rose-500/30"
                                 >
-                                    Publicar mi Empresa
+                                    Afiliar mi Empresa (Verificada)
                                 </Link>
                             </>
                         )}

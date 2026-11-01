@@ -1,9 +1,50 @@
-import { Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Header({ categories = [] }) {
+    const { auth } = usePage().props;
+    const user = auth?.user;
+    const isAdmin = user?.role === 'admin';
+
     const [searchQuery, setSearchQuery] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+    // Tema Oscuro / Claro persistente
+    const [theme, setTheme] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('theme');
+            if (saved) return saved;
+            return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        }
+        return 'light';
+    });
+
+    useEffect(() => {
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    };
+
+    const userMenuRef = useRef(null);
+
+    // Cerrar dropdown al hacer click fuera
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setIsUserMenuOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -14,153 +55,440 @@ export default function Header({ categories = [] }) {
 
     return (
         <>
-            {/* --- COMPACT MINIMALIST NAVBAR --- */}
-            <header className="bg-[#0b132b] border-b border-white/10 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-opacity-95">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            {/* ═══════════════════════════════════════════════════════════════════
+                NAVBAR PRINCIPAL MINIMALISTA Y UNIFICADO
+            ═══════════════════════════════════════════════════════════════════ */}
+            <header className="bg-white/95 dark:bg-[#0b132b]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/10 sticky top-0 z-40 shadow-xs transition-colors">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-6">
                     
-                    {/* LEFT: HAMBURGER & LOGO */}
-                    <div className="flex items-center gap-4 shrink-0">
-                        {/* Mobile & Sidebar Hamburger */}
+                    {/* COSTADO IZQUIERDO: TRES PUNTITOS (MENUBAR) + LOGO */}
+                    <div className="flex items-center gap-3 shrink-0">
+                        {/* Botón de tres puntitos para abrir el menú lateral */}
                         <button 
+                            type="button"
                             onClick={() => setIsSidebarOpen(true)}
-                            className="p-1 -ml-1 text-slate-300 hover:text-orange-500 transition focus:outline-none lg:hidden"
+                            className="p-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition focus:outline-none flex items-center justify-center"
+                            title="Opciones del Menú"
+                            aria-label="Abrir menú de opciones"
                         >
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="5" r="2" />
+                                <circle cx="12" cy="12" r="2" />
+                                <circle cx="12" cy="19" r="2" />
                             </svg>
                         </button>
 
-                        <Link href="/" className="flex items-center gap-2">
-                            <div className="font-black text-2xl tracking-tighter text-white flex items-center">
-                                LDR<span className="text-orange-500">.</span>
-                            </div>
+                        {/* Logo Minimalista */}
+                        <Link href={route('home')} className="flex items-center gap-1.5 group">
+                            <span className="font-black text-xl sm:text-2xl tracking-tighter text-slate-900 dark:text-white flex items-center">
+                                LDR<span className="text-blue-600">.</span>
+                            </span>
+                            <span className="hidden sm:inline-block text-[10px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+                                COMERCIAL
+                            </span>
                         </Link>
                     </div>
 
-                    {/* CENTER: DESKTOP NAV LINKS */}
-                    <nav className="hidden lg:block flex-1 pl-8">
-                        <ul className="flex items-center gap-8 text-xs font-bold text-slate-300 tracking-wide uppercase">
-                            <li><Link href="/" className="hover:text-orange-500 transition">Inicio</Link></li>
-                            <li><Link href={route('categories.index')} className="hover:text-orange-500 transition">Categorías</Link></li>
-                            <li><Link href={route('offers.index')} className="hover:text-orange-500 transition">Ofertas</Link></li>
-                            <li><Link href={route('events.public')} className="hover:text-orange-500 transition">Eventos</Link></li>
-                            <li><Link href={route('companies.index')} className="hover:text-orange-500 transition text-white">Directorio B2B</Link></li>
-                        </ul>
-                    </nav>
-
-                    {/* RIGHT: SEARCH & ICONS */}
-                    <div className="flex items-center gap-4 md:gap-6 shrink-0">
-                        
-                        {/* Compact Search */}
-                        <form onSubmit={handleSearch} className="hidden md:flex relative w-48 lg:w-64">
+                    {/* PARTE CENTRAL: BUSCADOR GENERAL */}
+                    <div className="flex-1 max-w-xl mx-auto">
+                        <form onSubmit={handleSearch} className="relative w-full">
                             <input
                                 type="text"
-                                placeholder="Buscar..."
+                                placeholder="Buscar productos, empresas, marcas..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-full pl-4 pr-10 py-1.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
+                                className="w-full bg-slate-100/90 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 focus:bg-white dark:focus:bg-[#0b132b] border border-slate-200/90 dark:border-white/10 rounded-full pl-10 pr-9 py-2 text-xs sm:text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500/20 transition shadow-inner"
                             />
-                            <button type="submit" className="absolute right-2 top-1.5 text-slate-400 hover:text-orange-500 transition">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            <button
+                                type="submit"
+                                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition"
+                                aria-label="Buscar"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </button>
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs p-1"
+                                >
+                                    ✕
+                                </button>
+                            )}
                         </form>
+                    </div>
 
-                        {/* Search Icon Mobile */}
-                        <button className="md:hidden text-slate-300 hover:text-orange-500 transition">
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                        </button>
-
-                        {/* Account Icon */}
-                        <Link href={route('login')} className="text-slate-300 hover:text-orange-500 transition relative">
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
+                    {/* PARTE DERECHA: ICONO DE USUARIO (CON MENÚ O REDIRECCIÓN) */}
+                    <div className="flex items-center gap-3 shrink-0 relative" ref={userMenuRef}>
+                        
+                        {/* Enlace rápido a cotizaciones si no es móvil */}
+                        <Link 
+                            href={route('sales.index')}
+                            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition"
+                        >
+                            <span>Cotizar</span>
                         </Link>
 
-                        {/* CTA Button / Cart */}
-                        <div className="hidden sm:block">
-                            <Link 
-                                href={route('register')} 
-                                className="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-full transition shadow-lg shadow-orange-500/20 flex items-center gap-2"
-                            >
-                                Registrarse
-                            </Link>
-                        </div>
-                        
-                        {/* Hamburger Desktop for Sidebar Drawer */}
-                        <button 
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="hidden lg:block p-1 text-slate-300 hover:text-orange-500 transition focus:outline-none"
+                        {/* Botón de Icono de Usuario */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (!user) {
+                                    router.visit(route('login'));
+                                } else {
+                                    setIsUserMenuOpen(!isUserMenuOpen);
+                                }
+                            }}
+                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition border shadow-xs ${
+                                user
+                                    ? isAdmin
+                                        ? 'bg-amber-500/10 border-amber-500/40 text-amber-500 hover:bg-amber-500/20'
+                                        : 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100'
+                                    : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-blue-600 hover:bg-slate-200/80 dark:hover:bg-white/10'
+                            }`}
+                            title={user ? `Usuario: ${user.name}` : 'Iniciar Sesión'}
+                            aria-label="Menú de cuenta de usuario"
                         >
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
+                            {user ? (
+                                <span className="font-black text-sm uppercase">
+                                    {user.name?.charAt(0) || 'U'}
+                                </span>
+                            ) : (
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            )}
                         </button>
+
+                        {/* DROPDOWN DE USUARIO REGISTRADO */}
+                        {user && isUserMenuOpen && (
+                            <div className="absolute right-0 top-12 w-64 bg-white dark:bg-[#0b132b] rounded-2xl shadow-xl border border-slate-200/90 dark:border-white/10 py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                                
+                                {/* Info de Usuario */}
+                                <div className="px-4 py-3 border-b border-slate-100 dark:border-white/5">
+                                    <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                        Sesión Activa
+                                    </div>
+                                    <div className="text-sm font-black text-slate-900 dark:text-white truncate mt-0.5">
+                                        {user.name}
+                                    </div>
+                                    <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                        {user.email}
+                                    </div>
+                                    <div className="mt-2">
+                                        <span className={`inline-block text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider ${
+                                            isAdmin
+                                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30'
+                                                : 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30'
+                                        }`}>
+                                            {isAdmin ? '🛡️ Super Administrador' : '🏢 Empresa / Socio B2B'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Opciones de Usuario */}
+                                <div className="py-1 text-xs font-bold text-slate-700 dark:text-slate-200">
+                                    <Link
+                                        href={route('dashboard')}
+                                        onClick={() => setIsUserMenuOpen(false)}
+                                        className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 transition"
+                                    >
+                                        <span className="text-sm">📊</span>
+                                        <span>Panel de Control</span>
+                                    </Link>
+
+                                    <Link
+                                        href={route('profile.edit')}
+                                        onClick={() => setIsUserMenuOpen(false)}
+                                        className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 transition"
+                                    >
+                                        <span className="text-sm">👤</span>
+                                        <span>Mi Perfil de Usuario</span>
+                                    </Link>
+
+                                    {user.company && (
+                                        <Link
+                                            href={route('company.edit')}
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                            className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 transition"
+                                        >
+                                            <span className="text-sm">🏢</span>
+                                            <span>Editar Datos de Empresa</span>
+                                        </Link>
+                                    )}
+
+                                    {isAdmin && (
+                                        <Link
+                                            href={route('admin.companies.index')}
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                            className="flex items-center gap-2.5 px-4 py-2 hover:bg-purple-50 dark:hover:bg-purple-500/10 text-purple-700 dark:text-purple-300 transition"
+                                        >
+                                            <span className="text-sm">🔑</span>
+                                            <span>Gestión de Cuentas B2B</span>
+                                        </Link>
+                                    )}
+
+                                    <Link
+                                        href={route('sales.index')}
+                                        onClick={() => setIsUserMenuOpen(false)}
+                                        className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 transition"
+                                    >
+                                        <span className="text-sm">📋</span>
+                                        <span>Ventas y Cotizaciones</span>
+                                    </Link>
+                                </div>
+
+                                {/* Cerrar Sesión */}
+                                <div className="pt-1 border-t border-slate-100 dark:border-white/5">
+                                    <Link
+                                        href={route('logout')}
+                                        method="post"
+                                        as="button"
+                                        onClick={() => setIsUserMenuOpen(false)}
+                                        className="w-full text-left flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition"
+                                    >
+                                        <span className="text-sm">🚪</span>
+                                        <span>Cerrar Sesión</span>
+                                    </Link>
+                                </div>
+
+                            </div>
+                        )}
+
                     </div>
+
                 </div>
             </header>
 
-            {/* --- SIDEBAR DRAWER (DARK THEMED) --- */}
+            {/* ═══════════════════════════════════════════════════════════════════
+                DRAWER LATERAL IZQUIERDO (Activado con los 3 puntitos)
+            ═══════════════════════════════════════════════════════════════════ */}
             {isSidebarOpen && (
                 <div className="fixed inset-0 z-50 flex">
-                    {/* Overlay */}
+                    {/* Backdrop Overlay */}
                     <div 
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
                         onClick={() => setIsSidebarOpen(false)}
-                    ></div>
+                    />
                     
-                    {/* Drawer */}
-                    <div className="relative w-full max-w-xs bg-[#0b132b] shadow-2xl flex flex-col h-full transform transition-transform border-l border-white/10">
-                        <div className="p-5 border-b border-white/10 flex items-center justify-between">
-                            <h2 className="text-lg font-black text-white flex items-center gap-2">
-                                <span className="text-orange-500">LDR.</span> Categorías
-                            </h2>
-                            <button 
-                                onClick={() => setIsSidebarOpen(false)}
-                                className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-full transition"
-                            >
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div className="p-4 overflow-y-auto flex-1">
-                            <ul className="space-y-1">
-                                {categories && categories.length > 0 ? (
-                                    categories.map(category => (
-                                        <li key={category.id}>
-                                            <Link 
-                                                href={route('companies.index', { category: category.id })}
-                                                className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-300 hover:bg-white/10 hover:text-white rounded-xl transition group"
-                                                onClick={() => setIsSidebarOpen(false)}
-                                            >
-                                                <span className="text-lg opacity-70 group-hover:opacity-100 group-hover:text-orange-500">{category.icon || '📌'}</span>
-                                                {category.name}
-                                            </Link>
-                                        </li>
-                                    ))
-                                ) : (
-                                    <li className="px-4 py-2 text-sm text-slate-500">No hay categorías disponibles.</li>
-                                )}
-                            </ul>
-
-                            <div className="mt-8 pt-6 border-t border-white/10 px-4">
-                                <Link 
-                                    href={route('login')}
-                                    className="block w-full text-center py-2 text-sm font-bold text-slate-300 border border-white/20 rounded-full hover:bg-white/10 transition mb-3"
+                    {/* Drawer Panel */}
+                    <div className="relative w-full max-w-xs bg-white dark:bg-[#0b132b] shadow-2xl flex flex-col h-full transform transition-transform border-r border-slate-200 dark:border-white/10">
+                        
+                        {/* Header del Drawer */}
+                        <div className="p-5 border-b border-slate-100 dark:border-white/10 flex items-center justify-between bg-slate-50/50 dark:bg-white/5">
+                            <div className="flex items-center gap-2 font-black text-lg text-slate-900 dark:text-white">
+                                <span>LDR<span className="text-blue-600">.</span></span>
+                                <span className="text-xs font-bold text-slate-400 border-l border-slate-300 dark:border-white/20 pl-2 uppercase tracking-wider">
+                                    Navegación
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={toggleTheme}
+                                    className="p-1.5 text-slate-500 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition"
+                                    title={theme === 'dark' ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'}
+                                    aria-label="Cambiar tema visual"
                                 >
-                                    Iniciar Sesión
-                                </Link>
-                                <Link 
-                                    href={route('register')}
-                                    className="block w-full text-center py-2 text-sm font-bold text-white bg-orange-500 rounded-full hover:bg-orange-600 transition shadow-lg shadow-orange-500/20"
+                                    {theme === 'dark' ? (
+                                        <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                        </svg>
+                                    )}
+                                </button>
+                                <button 
+                                    onClick={() => setIsSidebarOpen(false)}
+                                    className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition"
+                                    aria-label="Cerrar menú"
                                 >
-                                    Crear mi Empresa
-                                </Link>
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
+
+                        {/* Contenido con scroll */}
+                        <div className="p-4 overflow-y-auto flex-1 space-y-6">
+
+                            {/* SECCIÓN DE APARIENCIA / MODO OSCURO Y CLARO */}
+                            <div className="bg-slate-50 dark:bg-white/[0.04] p-3 rounded-2xl border border-slate-200/80 dark:border-white/10">
+                                <div className="flex items-center justify-between mb-2 px-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm">{theme === 'dark' ? '🌙' : '☀️'}</span>
+                                        <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+                                            Apariencia
+                                        </span>
+                                    </div>
+                                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300">
+                                        {theme === 'dark' ? 'Modo Oscuro' : 'Modo Claro'}
+                                    </span>
+                                </div>
+
+                                {/* Control segmentado Claro / Oscuro */}
+                                <div className="grid grid-cols-2 gap-1.5 bg-slate-200/70 dark:bg-white/10 p-1 rounded-xl">
+                                    <button
+                                        type="button"
+                                        onClick={() => setTheme('light')}
+                                        className={`flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                                            theme === 'light'
+                                                ? 'bg-white text-slate-900 shadow-xs'
+                                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                    >
+                                        <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                        </svg>
+                                        <span>Claro</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setTheme('dark')}
+                                        className={`flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                                            theme === 'dark'
+                                                ? 'bg-blue-600 text-white shadow-xs shadow-blue-500/30'
+                                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                    >
+                                        <svg className="w-4 h-4 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                        </svg>
+                                        <span>Oscuro</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            {/* Navegación Principal */}
+                            <div>
+                                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 mb-2">
+                                    SECCIONES PRINCIPALES
+                                </div>
+                                <ul className="space-y-1">
+                                    <li>
+                                        <Link 
+                                            href={route('home')}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                            className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white rounded-xl transition"
+                                        >
+                                            <span className="text-base">🏠</span>
+                                            <span>Inicio</span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link 
+                                            href={route('companies.index')}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                            className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white rounded-xl transition"
+                                        >
+                                            <span className="text-base">🏢</span>
+                                            <span>Directorio B2B</span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link 
+                                            href={route('categories.index')}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                            className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white rounded-xl transition"
+                                        >
+                                            <span className="text-base">🏷️</span>
+                                            <span>Categorías & Rubros</span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link 
+                                            href={route('offers.index')}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                            className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white rounded-xl transition"
+                                        >
+                                            <span className="text-base">🔥</span>
+                                            <span>Ofertas con Descuento</span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link 
+                                            href={route('events.public')}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                            className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white rounded-xl transition"
+                                        >
+                                            <span className="text-base">⚽</span>
+                                            <span>Eventos & Ferias</span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link 
+                                            href={route('sales.index')}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                            className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white rounded-xl transition"
+                                        >
+                                            <span className="text-base">📋</span>
+                                            <span>Ventas & Cotizaciones</span>
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* Rubros / Categorías Rápidas */}
+                            {categories && categories.length > 0 && (
+                                <div>
+                                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 mb-2">
+                                        RUBROS DESTACADOS
+                                    </div>
+                                    <ul className="space-y-1">
+                                        {categories.slice(0, 8).map(category => (
+                                            <li key={category.id}>
+                                                <Link 
+                                                    href={route('companies.index', { category: category.id })}
+                                                    className="flex items-center gap-3 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 dark:hover:text-white rounded-lg transition"
+                                                    onClick={() => setIsSidebarOpen(false)}
+                                                >
+                                                    <span className="text-base opacity-75">{category.icon || '📌'}</span>
+                                                    <span className="truncate">{category.name}</span>
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Footer del Drawer */}
+                        <div className="p-4 border-t border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/5">
+                            {user ? (
+                                <Link
+                                    href={route('dashboard')}
+                                    onClick={() => setIsSidebarOpen(false)}
+                                    className="block w-full py-2.5 text-center text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-sm"
+                                >
+                                    Ir a mi Panel ({user.name})
+                                </Link>
+                            ) : (
+                                <div className="space-y-2">
+                                    <Link
+                                        href={route('login')}
+                                        onClick={() => setIsSidebarOpen(false)}
+                                        className="block w-full py-2 text-center text-xs font-bold text-slate-700 dark:text-white border border-slate-200 dark:border-white/20 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 transition"
+                                    >
+                                        Iniciar Sesión
+                                    </Link>
+                                    <Link
+                                        href={route('afiliacion')}
+                                        onClick={() => setIsSidebarOpen(false)}
+                                        className="block w-full py-2 text-center text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-sm"
+                                    >
+                                        Afiliar mi Empresa (Verificación)
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+
                     </div>
                 </div>
             )}

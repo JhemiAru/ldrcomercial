@@ -100,14 +100,39 @@ export default function Login({ status, canResetPassword }) {
                     </button>
                 </div>
 
-                <div className="text-center mt-6">
-                    <span className="text-sm text-slate-500">¿No tienes una cuenta? </span>
+                <div className="text-center mt-4">
+                    <span className="text-xs text-slate-500">¿No tienes una cuenta de usuario? </span>
                     <Link
                         href={route('register')}
-                        className="text-sm font-bold text-orange-600 hover:text-orange-500 transition"
+                        className="text-xs font-bold text-blue-600 hover:text-blue-700 transition"
                     >
-                        Regístrate aquí
+                        Regístrate gratis
                     </Link>
+                </div>
+
+                <div className="mt-5 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600 space-y-2">
+                    <div className="flex items-center gap-2 font-black text-slate-900">
+                        <span>🛡️</span>
+                        <span>¿Tienes una empresa en Bolivia?</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                        Crea tu cuenta de usuario y podrás solicitar la vinculación de tu negocio. El equipo comercial de LDR realiza la verificación presencial y documental para habilitarte como Empresa Verificada ✓.
+                    </p>
+                    <div className="pt-1 flex items-center justify-between">
+                        <Link
+                            href={route('register')}
+                            className="font-bold text-blue-600 hover:text-blue-700 transition inline-flex items-center gap-1 text-[11px]"
+                        >
+                            <span>Registrar Usuario y Negocio</span>
+                            <span>→</span>
+                        </Link>
+                        <Link
+                            href={route('afiliacion')}
+                            className="font-bold text-slate-500 hover:text-slate-700 transition text-[11px]"
+                        >
+                            Conocer Proceso
+                        </Link>
+                    </div>
                 </div>
             </form>
         </GuestLayout>

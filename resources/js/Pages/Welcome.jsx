@@ -150,10 +150,10 @@ export default function Welcome({
                                     Ingresar
                                 </Link>
                                 <Link
-                                    href={route('register')}
+                                    href={route('afiliacion')}
                                     className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-500/25 transition"
                                 >
-                                    Publicar mi Empresa
+                                    Afiliar mi Empresa (Verificación)
                                 </Link>
                             </>
                         )}
@@ -514,10 +514,10 @@ export default function Welcome({
                         </div>
 
                         <Link
-                            href={route('register')}
-                            className="text-xs font-black text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-4 py-2.5 rounded-xl border border-orange-200 transition shrink-0"
+                            href={route('afiliacion')}
+                            className="text-xs font-black text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-4 py-2.5 rounded-xl border border-blue-200 transition shrink-0"
                         >
-                            ¿Tienes promociones? Publica tu negocio →
+                            ¿Deseas publicar tu negocio verificado? Solicita afiliación →
                         </Link>
                     </div>
                 </div>
@@ -938,10 +938,10 @@ export default function Welcome({
                         </p>
                     </div>
                     <Link
-                        href={route('register')}
+                        href={route('afiliacion')}
                         className="px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-sm rounded-xl shadow-lg shadow-blue-600/30 transition shrink-0"
                     >
-                        🚀 Registrar mi Empresa
+                        🛡️ Afiliar mi Empresa (Verificación)
                     </Link>
                 </div>
             </section>
@@ -973,8 +973,8 @@ export default function Welcome({
                             Acceso Empresas
                         </Link>
                         <span>•</span>
-                        <Link href={route('register')} className="hover:text-white transition">
-                            Registrar Negocio
+                        <Link href={route('afiliacion')} className="hover:text-white transition">
+                            Afiliación de Empresas
                         </Link>
                     </div>
                 </div>

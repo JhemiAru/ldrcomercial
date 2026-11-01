@@ -15,23 +15,34 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Portal Público
+// Portal Público (Vista nativa de Laravel / Blade)
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
+    $categoriesWithProducts = Category::where('is_active', true)
+        ->with(['products' => function ($q) {
+            $q->where('status', 'published')->with('company')->latest()->take(20);
+        }])
+        ->withCount(['products' => function ($q) {
+            $q->where('status', 'published');
+        }])
+        ->get()
+        ->filter(function ($cat) {
+            return $cat->products->count() > 0;
+        });
+
+    return view('welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'categories' => Category::where('is_active', true)->withCount('products')->get(),
+        'categoriesWithProducts' => $categoriesWithProducts,
         'promotionalProducts' => Product::with(['company', 'category'])->whereNotNull('original_price')->whereColumn('original_price', '>', 'price')->where('status', 'published')->take(6)->get(),
         'featuredProducts' => Product::with(['company', 'category'])->where('is_featured', true)->where('status', 'published')->take(12)->get(),
         'latestEvents' => Event::with('company')->where('status', 'active')->latest()->take(4)->get(),
-        'companies' => Company::with('category')->where('is_active', true)->take(8)->get(),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
+        'companies' => Company::with('category')->where('is_active', true)->where('is_verified', true)->take(8)->get(),
     ]);
 })->name('home');
 
 Route::get('/empresas', function (Request $request) {
-    $query = Company::with('category')->where('is_active', true);
+    $query = Company::with('category')->where('is_active', true)->where('is_verified', true);
     
     if ($request->filled('category')) {
         $query->where('category_id', $request->category);
@@ -54,7 +65,7 @@ Route::get('/empresas/{id}', function ($id) {
         $q->where('status', 'active')->take(3);
     }])->findOrFail($id);
 
-    if (!$company->is_active) abort(404);
+    if (!$company->is_active || !$company->is_verified) abort(404);
 
     return Inertia::render('Companies/Show', [
         'company' => $company,
@@ -86,11 +97,52 @@ Route::get('/eventos', function () {
     ]);
 })->name('events.public');
 
+// Detalle Público de Producto (Laravel / Blade nativo)
+Route::get('/productos/{id}', function ($id) {
+    $product = Product::with(['company.category', 'category'])
+        ->where('status', 'published')
+        ->where(function($q) use ($id) {
+            $q->where('id', $id)->orWhere('slug', $id);
+        })
+        ->firstOrFail();
+
+    // Productos relacionados de la misma categoría
+    $relatedProducts = Product::with(['company', 'category'])
+        ->where('category_id', $product->category_id)
+        ->where('id', '!=', $product->id)
+        ->where('status', 'published')
+        ->latest()
+        ->take(4)
+        ->get();
+
+    // Más productos del mismo proveedor
+    $companyProducts = Product::with(['company', 'category'])
+        ->where('company_id', $product->company_id)
+        ->where('id', '!=', $product->id)
+        ->where('status', 'published')
+        ->latest()
+        ->take(4)
+        ->get();
+
+    return view('products.show', compact('product', 'relatedProducts', 'companyProducts'));
+})->name('products.show');
+
+// Redirección amigable si se ingresa por /products/{id}
+Route::get('/products/{id}', function ($id) {
+    return redirect()->route('products.show', $id);
+});
+
+// Proceso de Afiliación y Verificación Presencial de Empresas (Antifraude)
+Route::get('/afiliacion', function () {
+    return view('auth.afiliacion');
+})->name('afiliacion');
+
 // Panel Administrativo / Comercial
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function (Request $request) {
         $user = $request->user();
         $company = $user->company()->with('category')->first();
+        $companies = $user->companies()->with('category')->get();
 
         $stats = [
             'productsCount' => $company ? $company->products()->count() : 0,
@@ -105,6 +157,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         return Inertia::render('Dashboard', [
             'company' => $company,
+            'companies' => $companies,
             'stats' => $stats,
             'recentProducts' => $recentProducts,
             'recentEvents' => $recentEvents,
@@ -116,7 +169,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/company', [CompanyController::class, 'update'])->name('company.update');
 
     // Gestión de Productos y Precios
-    Route::resource('products', ProductController::class);
+    Route::resource('products', ProductController::class)->except(['show']);
 
     // Gestión de Eventos y Promociones
     Route::resource('events', EventController::class);
@@ -127,6 +180,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Panel Administrador: Gestión de Cuentas de Compañías & Restablecimiento de Contraseñas
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/companies', [CompanyAccountController::class, 'index'])->name('companies.index');
+        Route::post('/companies', [CompanyAccountController::class, 'store'])->name('companies.store');
         Route::post('/users/{user}/reset-password', [CompanyAccountController::class, 'resetPassword'])->name('users.reset-password');
         Route::post('/companies/{company}/toggle-verification', [CompanyAccountController::class, 'toggleVerification'])->name('companies.toggle-verification');
     });

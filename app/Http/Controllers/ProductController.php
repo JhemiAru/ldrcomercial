@@ -47,7 +47,11 @@ class ProductController extends Controller
         $company = $request->user()->company;
         
         if (!$company) {
-            return redirect()->route('company.edit')->with('error', 'Debes configurar tu empresa antes de publicar productos.');
+            return redirect()->route('company.edit')->with('warning', 'Primero debes vincular tu empresa.');
+        }
+
+        if (!$company->is_verified) {
+            return redirect()->route('dashboard')->with('error', 'Tu empresa se encuentra en proceso de verificación presencial. El equipo comercial de LDR debe verificar tu local físico y papeles al día antes de habilitar la publicación de productos.');
         }
 
         return Inertia::render('Products/Create', [
@@ -58,6 +62,10 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $company = $request->user()->company;
+
+        if (!$company || !$company->is_verified) {
+            return redirect()->route('dashboard')->with('error', 'Tu empresa debe ser verificada presencialmente por LDR Comercial antes de publicar productos.');
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router, usePage } from '@inertiajs/react';
 import ResetPasswordModal from './Partials/ResetPasswordModal';
+import CreateCompanyModal from './Partials/CreateCompanyModal';
 
 export default function AdminCompaniesIndex({
     companies = [],
     usersWithoutCompany = [],
+    categories = [],
     stats = {},
     filters = {},
 }) {
@@ -13,10 +15,11 @@ export default function AdminCompaniesIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [filterVerified, setFilterVerified] = useState('all'); // 'all' | 'verified' | 'unverified'
 
-    // Estado del modal de restablecimiento de contraseña
+    // Estado de los modales
     const [selectedCompany, setSelectedCompany] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -60,10 +63,18 @@ export default function AdminCompaniesIndex({
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition shadow-md shadow-blue-500/20 flex items-center gap-1.5 shrink-0"
+                        >
+                            <span>+</span>
+                            <span>Registrar Empresa Verificada</span>
+                        </button>
                         <div className="px-3.5 py-2 bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 rounded-xl text-xs font-bold text-purple-700 dark:text-purple-300 flex items-center gap-2">
                             <span>🛡️</span>
-                            <span>Sesión Administrador: <strong>{auth?.user?.name}</strong></span>
+                            <span>Sesión: <strong>{auth?.user?.name}</strong></span>
                         </div>
                     </div>
                 </div>
@@ -362,6 +373,15 @@ export default function AdminCompaniesIndex({
                 onClose={() => setIsResetModalOpen(false)}
                 targetCompany={selectedCompany}
                 targetUser={selectedUser}
+            />
+
+            {/* ═══════════════════════════════════════════════
+                MODAL PARA REGISTRAR NUEVA EMPRESA VERIFICADA
+               ═══════════════════════════════════════════════ */}
+            <CreateCompanyModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+                categories={categories}
             />
         </AuthenticatedLayout>
     );

@@ -98,8 +98,8 @@ export default function FooterSection({ latestEvents }) {
                             Acceso Empresas
                         </Link>
                         <span>|</span>
-                        <Link href={route('register')} className="hover:text-rose-500 transition">
-                            Registrar Negocio
+                        <Link href={route('afiliacion')} className="hover:text-rose-500 transition">
+                            Afiliación de Empresas
                         </Link>
                     </div>
                 </div>
