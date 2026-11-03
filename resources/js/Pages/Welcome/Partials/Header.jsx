@@ -1,14 +1,28 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
 
-export default function Header({ categories = [] }) {
+export default function Header({
+    categories = [],
+    companyScope = null,
+    onCompanySearch = null,
+    companySearchTerm = '',
+}) {
     const { auth } = usePage().props;
     const user = auth?.user;
     const isAdmin = user?.role === 'admin';
 
-    const [searchQuery, setSearchQuery] = useState('');
+    // Alcance de búsqueda: Si hay companyScope, inicia en 'company', sino 'global'
+    const [searchScope, setSearchScope] = useState(companyScope ? 'company' : 'global');
+    const [searchQuery, setSearchQuery] = useState(companySearchTerm || '');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+    // Sincronizar texto cuando cambie desde la vista de la empresa
+    useEffect(() => {
+        if (companyScope && searchScope === 'company') {
+            setSearchQuery(companySearchTerm || '');
+        }
+    }, [companySearchTerm]);
 
     // Tema Oscuro / Claro persistente
     const [theme, setTheme] = useState(() => {
@@ -48,8 +62,29 @@ export default function Header({ categories = [] }) {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        if (searchQuery.trim()) {
-            router.get(route('companies.index'), { search: searchQuery });
+        if (searchScope === 'company' && companyScope) {
+            // Notificar a la vista de la empresa Show.jsx
+            if (onCompanySearch) {
+                onCompanySearch(searchQuery);
+            }
+            // Desplazar suavemente hasta el catálogo de productos
+            const catalogo = document.getElementById('catalogo');
+            if (catalogo) {
+                catalogo.scrollIntoView({ behavior: 'smooth' });
+            }
+        } else {
+            // Búsqueda global en el directorio
+            if (searchQuery.trim()) {
+                router.get(route('companies.index'), { search: searchQuery });
+            }
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const val = e.target.value;
+        setSearchQuery(val);
+        if (searchScope === 'company' && onCompanySearch) {
+            onCompanySearch(val);
         }
     };
 
@@ -89,33 +124,97 @@ export default function Header({ categories = [] }) {
                         </Link>
                     </div>
 
-                    {/* PARTE CENTRAL: BUSCADOR GENERAL */}
+                    {/* PARTE CENTRAL: BUSCADOR GENERAL / ADAPTATIVO A LA EMPRESA */}
                     <div className="flex-1 max-w-xl mx-auto">
                         <form onSubmit={handleSearch} className="relative w-full">
-                            <input
-                                type="text"
-                                placeholder="Buscar productos, empresas, marcas..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-slate-100/90 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 focus:bg-white dark:focus:bg-[#0b132b] border border-slate-200/90 dark:border-white/10 rounded-full pl-10 pr-9 py-2 text-xs sm:text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500/20 transition shadow-inner"
-                            />
-                            <button
-                                type="submit"
-                                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition"
-                                aria-label="Buscar"
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </button>
-                            {searchQuery && (
+                            <div className="relative flex items-center w-full bg-slate-100/90 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 focus-within:bg-white dark:focus-within:bg-[#0b132b] border border-slate-200/90 dark:border-white/10 rounded-full py-1 pl-1.5 pr-2 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 dark:focus-within:ring-blue-500/20 transition shadow-inner">
+                                
+                                {/* Si estamos en contexto de empresa, selector de alcance (Scope) */}
+                                {companyScope ? (
+                                    <div className="relative shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSearchScope(searchScope === 'company' ? 'global' : 'company')}
+                                            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black transition cursor-pointer ${
+                                                searchScope === 'company'
+                                                    ? 'bg-blue-600 text-white shadow-xs'
+                                                    : 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-300'
+                                            }`}
+                                            title={searchScope === 'company' ? `Buscando en ${companyScope.name}. Clic para buscar en todo el portal.` : `Buscando en todo el portal. Clic para buscar en ${companyScope.name}.`}
+                                        >
+                                            <span>{searchScope === 'company' ? '🏢' : '🌐'}</span>
+                                            <span className="hidden sm:inline truncate max-w-[110px]">
+                                                {searchScope === 'company' ? companyScope.name : 'Todo el portal'}
+                                            </span>
+                                            <span className="text-[9px] opacity-75">⇄</span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <span className="pl-3 text-slate-400">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </span>
+                                )}
+
+                                <input
+                                    type="text"
+                                    placeholder={
+                                        searchScope === 'company' && companyScope
+                                            ? `Buscar productos en ${companyScope.name}...`
+                                            : "Buscar productos, empresas, marcas en todo Bolivia..."
+                                    }
+                                    value={searchQuery}
+                                    onChange={handleInputChange}
+                                    className="w-full bg-transparent border-none text-xs sm:text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-0 py-1.5 px-2.5"
+                                />
+
+                                {/* Botón Limpiar */}
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSearchQuery('');
+                                            if (searchScope === 'company' && onCompanySearch) {
+                                                onCompanySearch('');
+                                            }
+                                        }}
+                                        className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs p-1 shrink-0"
+                                        title="Limpiar búsqueda"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+
+                                {/* Botón Submit / Lupa */}
                                 <button
-                                    type="button"
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs p-1"
+                                    type="submit"
+                                    className="p-1.5 rounded-full text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-white/10 transition shrink-0"
+                                    aria-label="Buscar"
+                                    title={searchScope === 'company' ? `Filtrar catálogo de ${companyScope?.name}` : 'Buscar en todo LDR Comercial'}
                                 >
-                                    ✕
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
                                 </button>
+                            </div>
+
+                            {/* Sugerencia flotante cuando busca dentro de la empresa */}
+                            {companyScope && searchScope === 'company' && searchQuery.trim() && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-[#0b132b] rounded-2xl shadow-xl border border-slate-200 dark:border-white/10 p-2 z-50 flex items-center justify-between text-xs animate-fadeIn">
+                                    <span className="text-slate-500 dark:text-slate-400 truncate pl-2">
+                                        Filtrando en: <strong className="text-slate-700 dark:text-slate-200">{companyScope.name}</strong>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            router.get(route('companies.index'), { search: searchQuery });
+                                        }}
+                                        className="text-blue-600 dark:text-blue-400 hover:underline font-bold px-2 py-1 bg-blue-50 dark:bg-blue-500/10 rounded-lg shrink-0 flex items-center gap-1"
+                                    >
+                                        <span>Buscar en todo el portal →</span>
+                                    </button>
+                                </div>
                             )}
                         </form>
                     </div>

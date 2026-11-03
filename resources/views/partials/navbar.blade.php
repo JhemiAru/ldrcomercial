@@ -91,10 +91,17 @@
                         </div>
 
                         <div class="py-1 text-xs font-bold text-slate-700 dark:text-slate-200">
-                            <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 transition">
-                                <span class="text-sm">📊</span>
-                                <span>Panel de Control</span>
-                            </a>
+                            @if(Auth::user()->role === 'admin')
+                                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-purple-50 dark:hover:bg-purple-500/10 text-purple-700 dark:text-purple-300 font-black transition">
+                                    <span class="text-sm">👑</span>
+                                    <span>Panel Maestro (Admin)</span>
+                                </a>
+                            @else
+                                <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 transition">
+                                    <span class="text-sm">📊</span>
+                                    <span>Panel de Control</span>
+                                </a>
+                            @endif
                             <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 transition">
                                 <span class="text-sm">👤</span>
                                 <span>Mi Perfil de Usuario</span>
@@ -107,8 +114,8 @@
                             @endif
                             @if(Auth::user()->role === 'admin')
                                 <a href="{{ route('admin.companies.index') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-purple-50 dark:hover:bg-purple-500/10 text-purple-700 dark:text-purple-300 transition">
-                                    <span class="text-sm">🔑</span>
-                                    <span>Gestión de Cuentas B2B</span>
+                                    <span class="text-sm">🏢</span>
+                                    <span>Administrar Empresas</span>
                                 </a>
                             @endif
                             <a href="{{ route('sales.index') }}" class="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-blue-600 transition">

@@ -7,6 +7,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use App\Services\ImageOptimizer;
 
 class ProductController extends Controller
 {
@@ -47,15 +48,12 @@ class ProductController extends Controller
         $company = $request->user()->company;
         
         if (!$company) {
-            return redirect()->route('company.edit')->with('warning', 'Primero debes vincular tu empresa.');
-        }
-
-        if (!$company->is_verified) {
-            return redirect()->route('dashboard')->with('error', 'Tu empresa se encuentra en proceso de verificación presencial. El equipo comercial de LDR debe verificar tu local físico y papeles al día antes de habilitar la publicación de productos.');
+            return redirect()->route('company.edit')->with('warning', 'Primero debes registrar los datos de tu empresa.');
         }
 
         return Inertia::render('Products/Create', [
             'categories' => Category::all(),
+            'company' => $company,
         ]);
     }
 
@@ -63,36 +61,62 @@ class ProductController extends Controller
     {
         $company = $request->user()->company;
 
-        if (!$company || !$company->is_verified) {
-            return redirect()->route('dashboard')->with('error', 'Tu empresa debe ser verificada presencialmente por LDR Comercial antes de publicar productos.');
+        if (!$company) {
+            return redirect()->route('company.edit')->with('warning', 'Primero debes registrar los datos de tu empresa.');
         }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
-            'short_description' => 'nullable|string|max:255',
+            'sku' => 'nullable|string|max:100',
+            'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'original_price' => 'nullable|numeric|min:0',
-            'currency' => 'required|string|max:10',
-            'unit' => 'required|string|max:50',
+            'wholesale_price' => 'nullable|numeric|min:0',
+            'min_wholesale_qty' => 'nullable|integer|min:1',
+            'currency' => 'nullable|string|max:10',
+            'price_type' => 'nullable|string|max:50',
+            'unit' => 'nullable|string|max:50',
             'stock_quantity' => 'nullable|integer|min:0',
             'in_stock' => 'boolean',
-            'status' => 'required|in:published,draft,archived',
+            'status' => 'nullable|in:published,draft,archived',
             'is_featured' => 'boolean',
-            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'main_image' => 'nullable',
+        ], [
+            'name.required' => 'El nombre del producto es obligatorio.',
+            'category_id.required' => 'Debes seleccionar una categoría.',
+            'category_id.exists' => 'La categoría seleccionada no existe.',
+            'price.required' => 'El precio del producto es obligatorio.',
+            'price.numeric' => 'El precio debe ser un número válido.',
         ]);
 
+        $validated['status'] = $validated['status'] ?? 'published';
+        $validated['currency'] = $validated['currency'] ?? 'BOB';
+        $validated['unit'] = $validated['unit'] ?? 'unidad';
+        $validated['price_type'] = $validated['price_type'] ?? 'fixed';
+        $validated['min_wholesale_qty'] = $validated['min_wholesale_qty'] ?? 1;
+
         if ($request->hasFile('main_image')) {
-            $path = $request->file('main_image')->store('products', 'public');
-            $validated['main_image'] = '/storage/' . $path;
+            $request->validate([
+                'main_image' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:8192'],
+            ], [
+                'main_image.image' => 'La imagen del producto debe ser un archivo válido (JPG, PNG, WEBP).',
+                'main_image.max' => 'La imagen del producto no debe superar los 8MB.',
+            ]);
+
+            $validated['main_image'] = ImageOptimizer::storeAsWebp($request->file('main_image'), 'products', 1000, 1000, 82);
+        } elseif ($request->filled('main_image') && is_string($request->main_image)) {
+            $validated['main_image'] = $request->main_image;
+        } else {
+            unset($validated['main_image']);
         }
 
         $validated['slug'] = Str::slug($validated['name']) . '-' . uniqid();
         
         $company->products()->create($validated);
 
-        return redirect()->route('products.index')->with('success', 'Producto creado exitosamente.');
+        return redirect()->route('products.index')->with('success', '¡Producto publicado exitosamente en tu catálogo!');
     }
 
     public function edit(Request $request, Product $product)
@@ -120,22 +144,50 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
-            'short_description' => 'nullable|string|max:255',
+            'sku' => 'nullable|string|max:100',
+            'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'original_price' => 'nullable|numeric|min:0',
-            'currency' => 'required|string|max:10',
-            'unit' => 'required|string|max:50',
+            'wholesale_price' => 'nullable|numeric|min:0',
+            'min_wholesale_qty' => 'nullable|integer|min:1',
+            'currency' => 'nullable|string|max:10',
+            'price_type' => 'nullable|string|max:50',
+            'unit' => 'nullable|string|max:50',
             'stock_quantity' => 'nullable|integer|min:0',
             'in_stock' => 'boolean',
-            'status' => 'required|in:published,draft,archived',
+            'status' => 'nullable|in:published,draft,archived',
             'is_featured' => 'boolean',
-            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'main_image' => 'nullable',
+        ], [
+            'name.required' => 'El nombre del producto es obligatorio.',
+            'category_id.required' => 'Debes seleccionar una categoría.',
+            'category_id.exists' => 'La categoría seleccionada no existe.',
+            'price.required' => 'El precio del producto es obligatorio.',
+            'price.numeric' => 'El precio debe ser un número válido.',
         ]);
 
+        $validated['status'] = $validated['status'] ?? ($product->status ?: 'published');
+        $validated['currency'] = $validated['currency'] ?? ($product->currency ?: 'BOB');
+        $validated['unit'] = $validated['unit'] ?? ($product->unit ?: 'unidad');
+        $validated['price_type'] = $validated['price_type'] ?? ($product->price_type ?: 'fixed');
+        $validated['min_wholesale_qty'] = $validated['min_wholesale_qty'] ?? ($product->min_wholesale_qty ?: 1);
+
         if ($request->hasFile('main_image')) {
-            $path = $request->file('main_image')->store('products', 'public');
-            $validated['main_image'] = '/storage/' . $path;
+            $request->validate([
+                'main_image' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:8192'],
+            ], [
+                'main_image.image' => 'La imagen del producto debe ser un archivo válido (JPG, PNG, WEBP).',
+                'main_image.max' => 'La imagen del producto no debe superar los 8MB.',
+            ]);
+
+            $validated['main_image'] = ImageOptimizer::storeAsWebp($request->file('main_image'), 'products', 1000, 1000, 82);
+        } elseif ($request->filled('main_image') && is_string($request->main_image)) {
+            $validated['main_image'] = $request->main_image;
+        } elseif ($request->boolean('remove_main_image')) {
+            $validated['main_image'] = null;
+        } else {
+            unset($validated['main_image']);
         }
 
         if (!$product->slug) {
@@ -144,7 +196,7 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        return redirect()->route('products.index')->with('success', 'Producto actualizado exitosamente.');
+        return redirect()->route('products.index')->with('success', '¡Producto actualizado exitosamente!');
     }
 
     public function destroy(Request $request, Product $product)

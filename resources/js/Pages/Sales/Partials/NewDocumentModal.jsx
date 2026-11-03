@@ -20,6 +20,7 @@ export default function NewDocumentModal({
     catalogProducts = [],
     company,
     onCreateDocument,
+    isSubmitting = false,
 }) {
     if (!isOpen) return null;
 
@@ -32,12 +33,14 @@ export default function NewDocumentModal({
     const [clientAddress, setClientAddress] = useState('');
     const [paymentTerms, setPaymentTerms] = useState('Pago al Contado / QR Simple');
     const [deliveryTime, setDeliveryTime] = useState('Inmediata / En 24 horas');
+    const [validityDays, setValidityDays] = useState(15);
     const [notes, setNotes] = useState('Precios en Bolivianos (Bs.). Sujeto a stock disponible.');
 
-    // Líneas de productos
+    // Líneas de productos iniciales
     const [items, setItems] = useState([
         {
             id: Date.now(),
+            product_id: catalogProducts[0]?.id || null,
             name: catalogProducts[0]?.name || 'Producto / Servicio Comercial',
             sku: catalogProducts[0]?.sku || 'PROD-01',
             unit: catalogProducts[0]?.unit || 'Pza',
@@ -53,6 +56,7 @@ export default function NewDocumentModal({
             ...items,
             {
                 id: Date.now() + Math.random(),
+                product_id: null,
                 name: '',
                 sku: '',
                 unit: 'Pza',
@@ -63,7 +67,7 @@ export default function NewDocumentModal({
         ]);
     };
 
-    // Modificar fila
+    // Modificar campo de una fila
     const handleItemChange = (index, field, value) => {
         const newItems = [...items];
         newItems[index][field] = value;
@@ -77,6 +81,7 @@ export default function NewDocumentModal({
             const newItems = [...items];
             newItems[index] = {
                 ...newItems[index],
+                product_id: prod.id,
                 name: prod.name,
                 sku: prod.sku || '',
                 unit: prod.unit || 'Pza',
@@ -97,44 +102,35 @@ export default function NewDocumentModal({
 
     const totals = calculateDocumentTotals(items, false);
 
-    // Enviar y generar
+    // Enviar y persistir en la base de datos
     const handleSubmit = (openPreviewImmediately = false) => {
         if (!clientName.trim()) {
             alert('Por favor introduce el nombre o razón social del cliente.');
             return;
         }
 
-        const prefix = docType === 'quotation' ? 'COT' : 'VEN';
-        const randomNum = Math.floor(1000 + Math.random() * 9000);
-        const currentYear = new Date().getFullYear();
-        const docId = `${prefix}-${currentYear}-${randomNum}`;
+        const validItems = items.filter((it) => it.name && it.name.trim() !== '');
+        if (validItems.length === 0) {
+            alert('Debes agregar al menos un ítem con nombre válido.');
+            return;
+        }
 
-        const today = new Date().toISOString().split('T')[0];
-        const due = new Date();
-        due.setDate(due.getDate() + 15);
-        const dueDate = due.toISOString().split('T')[0];
-
-        const newDoc = {
-            id: docId,
+        const payload = {
             doc_type: docType,
-            title: docType === 'quotation' ? `Cotización para ${clientName}` : `Nota de Venta para ${clientName}`,
-            client_name: clientName,
-            client_nit: clientNit,
-            client_phone: clientPhone,
-            client_email: clientEmail,
-            client_city: clientCity,
-            client_address: clientAddress,
-            date: today,
-            due_date: docType === 'quotation' ? dueDate : today,
-            status: docType === 'quotation' ? 'sent' : 'completed',
+            client_name: clientName.trim(),
+            client_nit: clientNit.trim() || null,
+            client_phone: clientPhone.trim() || null,
+            client_email: clientEmail.trim() || null,
+            client_city: clientCity || null,
+            client_address: clientAddress.trim() || null,
             payment_terms: paymentTerms,
             delivery_time: deliveryTime,
-            validity_days: 15,
+            validity_days: Number(validityDays) || 15,
             notes: notes,
-            items: items.map((it) => ({
-                id: it.id,
-                name: it.name || 'Ítem General',
-                sku: it.sku || '',
+            items: validItems.map((it) => ({
+                product_id: it.product_id || null,
+                name: it.name.trim(),
+                sku: it.sku ? it.sku.trim() : null,
                 unit: it.unit || 'Pza',
                 quantity: Number(it.quantity) || 1,
                 price: Number(it.price) || 0,
@@ -142,8 +138,7 @@ export default function NewDocumentModal({
             })),
         };
 
-        onCreateDocument(newDoc, openPreviewImmediately);
-        onClose();
+        onCreateDocument(payload, openPreviewImmediately);
     };
 
     return (
@@ -154,15 +149,16 @@ export default function NewDocumentModal({
                     <div>
                         <h3 className="font-black text-slate-900 dark:text-white text-lg flex items-center gap-2">
                             <span>⚡</span>
-                            <span>Crear Nuevo Documento Comercial</span>
+                            <span>Crear Nuevo Documento Comercial (MySQL)</span>
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            Elige el tipo de documento, añade cliente e ítems y genera la vista previa oficial
+                            Se registrará en la base de datos de tu empresa con folio correlativo oficial
                         </p>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
+                        disabled={isSubmitting}
                         className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-white flex items-center justify-center font-bold text-sm"
                     >
                         ✕
@@ -192,7 +188,7 @@ export default function NewDocumentModal({
                                         Cotización / Proforma
                                     </div>
                                     <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                        Propuesta económica con validez de días, ideal para clientes y compras B2B
+                                        Propuesta económica con validez en días, ideal para clientes B2B
                                     </div>
                                 </div>
                             </button>
@@ -222,7 +218,7 @@ export default function NewDocumentModal({
                     {/* DATOS DEL CLIENTE */}
                     <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-2xl border border-slate-200 dark:border-white/10 space-y-3">
                         <div className="font-black text-xs uppercase tracking-wider text-slate-800 dark:text-white flex items-center gap-1.5">
-                            <span>👤</span> Información del Cliente
+                            <span>👤</span> Información del Cliente / Comprador
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -280,6 +276,32 @@ export default function NewDocumentModal({
                                     ))}
                                 </select>
                             </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                    Correo Electrónico (Opcional)
+                                </label>
+                                <input
+                                    type="email"
+                                    className="w-full text-xs rounded-xl border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-orange-500 focus:ring-orange-500"
+                                    placeholder="compras@cliente.bo"
+                                    value={clientEmail}
+                                    onChange={(e) => setClientEmail(e.target.value)}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                    Dirección de Entrega
+                                </label>
+                                <input
+                                    type="text"
+                                    className="w-full text-xs rounded-xl border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-orange-500 focus:ring-orange-500"
+                                    placeholder="Ej. Av. Cristo Redentor 4to Anillo"
+                                    value={clientAddress}
+                                    onChange={(e) => setClientAddress(e.target.value)}
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -316,10 +338,10 @@ export default function NewDocumentModal({
                                                         onChange={(e) => handleSelectCatalogProduct(index, e.target.value)}
                                                         defaultValue=""
                                                     >
-                                                        <option value="" disabled>Seleccionar de mi catálogo...</option>
+                                                        <option value="" disabled>Cargar desde mi catálogo de productos...</option>
                                                         {catalogProducts.map((p) => (
                                                             <option key={p.id} value={p.id}>
-                                                                {p.name} - Bs. {Number(p.price).toFixed(2)}
+                                                                {p.name} - Bs. {Number(p.price).toFixed(2)} {p.wholesale_price ? `(Mayor: Bs. ${Number(p.wholesale_price).toFixed(2)})` : ''}
                                                             </option>
                                                         ))}
                                                     </select>
@@ -328,7 +350,7 @@ export default function NewDocumentModal({
                                             <input
                                                 type="text"
                                                 className="w-full text-xs font-bold rounded-lg border-slate-300 bg-white text-slate-900 placeholder-slate-400"
-                                                placeholder="Nombre o descripción del producto"
+                                                placeholder="Nombre o descripción del producto / servicio"
                                                 value={item.name}
                                                 onChange={(e) => handleItemChange(index, 'name', e.target.value)}
                                             />
@@ -339,7 +361,8 @@ export default function NewDocumentModal({
                                                 <label className="text-[10px] text-slate-500 block mb-0.5">Cant.</label>
                                                 <input
                                                     type="number"
-                                                    min="1"
+                                                    min="0.01"
+                                                    step="any"
                                                     className="w-16 text-xs text-center font-bold rounded-lg border-slate-300 bg-white text-slate-900"
                                                     value={item.quantity}
                                                     onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
@@ -403,7 +426,7 @@ export default function NewDocumentModal({
                     </div>
 
                     {/* CONDICIONES DE PAGO Y NOTAS */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
                                 Términos / Forma de Pago
@@ -427,6 +450,34 @@ export default function NewDocumentModal({
                                 onChange={(e) => setDeliveryTime(e.target.value)}
                             />
                         </div>
+
+                        {docType === 'quotation' && (
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                    Validez de la Oferta (Días)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="180"
+                                    className="w-full text-xs rounded-xl border-slate-300 bg-white text-slate-900 focus:border-orange-500 focus:ring-orange-500"
+                                    value={validityDays}
+                                    onChange={(e) => setValidityDays(e.target.value)}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                            Notas y Observaciones
+                        </label>
+                        <textarea
+                            rows="2"
+                            className="w-full text-xs rounded-xl border-slate-300 bg-white text-slate-900 focus:border-orange-500 focus:ring-orange-500"
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                        />
                     </div>
                 </div>
 
@@ -435,6 +486,7 @@ export default function NewDocumentModal({
                     <button
                         type="button"
                         onClick={onClose}
+                        disabled={isSubmitting}
                         className="px-4 py-2 bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-800 dark:text-white text-xs font-bold rounded-xl transition"
                     >
                         Cancelar
@@ -443,19 +495,21 @@ export default function NewDocumentModal({
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
+                            disabled={isSubmitting}
                             onClick={() => handleSubmit(false)}
-                            className="px-4 py-2 bg-slate-800 dark:bg-white/10 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition"
+                            className="px-4 py-2 bg-slate-800 dark:bg-white/10 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition disabled:opacity-50"
                         >
-                            Guardar en Lista
+                            {isSubmitting ? 'Guardando...' : 'Guardar en Base de Datos'}
                         </button>
 
                         <button
                             type="button"
+                            disabled={isSubmitting}
                             onClick={() => handleSubmit(true)}
-                            className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-black rounded-xl shadow-md shadow-orange-500/20 transition flex items-center gap-1.5"
+                            className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-black rounded-xl shadow-md shadow-orange-500/20 transition flex items-center gap-1.5 disabled:opacity-50"
                         >
                             <span>👁️</span>
-                            <span>Guardar y Ver Vista Previa Oficial</span>
+                            <span>{isSubmitting ? 'Guardando...' : 'Guardar y Ver Vista Previa'}</span>
                         </button>
                     </div>
                 </div>
@@ -463,4 +517,3 @@ export default function NewDocumentModal({
         </div>
     );
 }
-

@@ -20,6 +20,8 @@ class Company extends Model
         'tax_id',
         'logo',
         'banner',
+        'banner_2',
+        'banner_3',
         'short_description',
         'description',
         'phone',
@@ -33,6 +35,7 @@ class Company extends Model
         'longitude',
         'facebook',
         'instagram',
+        'tiktok',
         'linkedin',
         'is_verified',
         'is_active',
@@ -63,6 +66,21 @@ class Company extends Model
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);
+    }
+
+    public function commercialDocuments(): HasMany
+    {
+        return $this->hasMany(CommercialDocument::class);
+    }
+
+    public function quotations(): HasMany
+    {
+        return $this->hasMany(CommercialDocument::class)->where('doc_type', 'quotation');
+    }
+
+    public function sales(): HasMany
+    {
+        return $this->hasMany(CommercialDocument::class)->where('doc_type', 'sale');
     }
 }
 

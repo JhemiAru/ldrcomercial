@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Category;
 use Illuminate\Support\Str;
+use App\Services\ImageOptimizer;
 
 class CompanyController extends Controller
 {
@@ -28,7 +29,7 @@ class CompanyController extends Controller
             'name' => 'required|string|max:255',
             'legal_name' => 'nullable|string|max:255',
             'tax_id' => 'nullable|string|max:100',
-            'short_description' => 'nullable|string|max:250',
+            'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
             'address' => 'nullable|string|max:255',
@@ -37,16 +38,53 @@ class CompanyController extends Controller
             'phone' => 'nullable|string|max:50',
             'whatsapp' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
-            'website' => 'nullable|url|max:255',
-            'facebook' => 'nullable|url|max:255',
-            'instagram' => 'nullable|url|max:255',
-            'tiktok' => 'nullable|url|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'website' => 'nullable|string|max:255',
+            'facebook' => 'nullable|string|max:255',
+            'instagram' => 'nullable|string|max:255',
+            'tiktok' => 'nullable|string|max:255',
+            'linkedin' => 'nullable|string|max:255',
+            'logo' => 'nullable',
+            'banner' => 'nullable',
+            'banner_2' => 'nullable',
+            'banner_3' => 'nullable',
         ]);
 
+        // Procesar foto de perfil / logo
         if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('companies', 'public');
-            $validated['logo'] = '/storage/' . $path;
+            $request->validate([
+                'logo' => ['image', 'mimes:jpeg,png,jpg,webp,svg,gif', 'max:8192'],
+            ], [
+                'logo.image' => 'El logo debe ser un archivo de imagen válido (JPG, PNG, WEBP, SVG).',
+                'logo.max' => 'La imagen de perfil no debe superar los 8MB.',
+            ]);
+
+            $validated['logo'] = ImageOptimizer::storeAsWebp($request->file('logo'), 'companies', 500, 500, 85);
+        } elseif ($request->filled('logo') && is_string($request->logo)) {
+            $validated['logo'] = $request->logo;
+        } elseif ($request->boolean('remove_logo')) {
+            $validated['logo'] = null;
+        } else {
+            unset($validated['logo']);
+        }
+
+        // Procesar imágenes del carrusel publicitario (Banner 1, Banner 2, Banner 3)
+        foreach (['banner', 'banner_2', 'banner_3'] as $bannerField) {
+            if ($request->hasFile($bannerField)) {
+                $request->validate([
+                    $bannerField => ['image', 'mimes:jpeg,png,jpg,webp', 'max:8192'],
+                ], [
+                    "{$bannerField}.image" => 'La imagen del banner debe ser un archivo válido.',
+                    "{$bannerField}.max" => 'Cada imagen del carrusel no debe superar los 8MB.',
+                ]);
+
+                $validated[$bannerField] = ImageOptimizer::storeAsWebp($request->file($bannerField), 'companies/banners', 1600, 900, 82);
+            } elseif ($request->filled($bannerField) && is_string($request->$bannerField)) {
+                $validated[$bannerField] = $request->$bannerField;
+            } elseif ($request->boolean("remove_{$bannerField}")) {
+                $validated[$bannerField] = null;
+            } else {
+                unset($validated[$bannerField]);
+            }
         }
 
         if (!$company) {

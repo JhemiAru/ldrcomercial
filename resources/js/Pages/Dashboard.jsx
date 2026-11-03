@@ -31,8 +31,8 @@ export default function Dashboard({ company, companies = [], stats, recentProduc
                 : 'Completa los datos de tu empresa (NIT, dirección y contacto) para obtener la insignia azul de verificación y atraer más compradores.',
             buttonText: 'Actualizar Perfil de Empresa',
             buttonLink: route('company.edit'),
-            secondaryText: 'Ver Portal Público',
-            secondaryLink: route('home'),
+            secondaryText: company?.id ? 'Ver Mi Perfil Público' : 'Ver Portal Público',
+            secondaryLink: company?.id ? route('companies.show', company.id) : route('home'),
             bgColor: 'from-emerald-950 via-teal-900 to-slate-900',
             accentColor: 'text-emerald-400',
             icon: '🛡️',
@@ -664,8 +664,12 @@ export default function Dashboard({ company, companies = [], stats, recentProduc
                                     <span>⚽ Publicar evento o cancha</span>
                                     <span>→</span>
                                 </Link>
-                                <Link href={route('home')} target="_blank" className="w-full flex items-center justify-between p-2.5 bg-black/10 dark:bg-black/20 hover:bg-black/20 dark:hover:bg-black/30 rounded-xl text-xs font-bold transition">
-                                    <span>🌐 Ver portal público</span>
+                                <Link 
+                                    href={company?.id ? route('companies.show', company.id) : route('home')} 
+                                    target="_blank" 
+                                    className="w-full flex items-center justify-between p-2.5 bg-black/10 dark:bg-black/20 hover:bg-black/20 dark:hover:bg-black/30 rounded-xl text-xs font-bold transition"
+                                >
+                                    <span>{company?.id ? '🏪 Ver mi perfil público' : '🌐 Ver portal público'}</span>
                                     <span>↗</span>
                                 </Link>
                             </div>

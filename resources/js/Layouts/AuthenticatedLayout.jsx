@@ -33,32 +33,66 @@ export default function AuthenticatedLayout({ header, children }) {
         ...(user?.role === 'admin'
             ? [
                   {
-                      name: 'Cuentas de Compañías',
+                      name: 'Panel Maestro',
+                      href: route('admin.dashboard'),
+                      active: route().current('admin.dashboard'),
+                      badge: 'MASTER',
+                      icon: (
+                          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect width="7" height="9" x="3" y="3" rx="1" />
+                              <rect width="7" height="5" x="14" y="3" rx="1" />
+                              <rect width="7" height="9" x="14" y="12" rx="1" />
+                              <rect width="7" height="5" x="3" y="16" rx="1" />
+                          </svg>
+                      ),
+                  },
+                  {
+                      name: 'Administrar Empresas',
                       href: route('admin.companies.index'),
                       active: route().current('admin.companies.*'),
                       badge: 'ADMIN',
                       icon: (
                           <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                              <path d="M3 21h18" />
+                              <path d="M5 21V7l8-4v18" />
+                              <path d="M19 21V11l-6-4" />
+                              <path d="M9 9v.01" />
+                              <path d="M9 12v.01" />
+                              <path d="M9 15v.01" />
+                              <path d="M9 18v.01" />
+                          </svg>
+                      ),
+                  },
+                  {
+                      name: 'Gestión de Usuarios',
+                      href: route('admin.users.index'),
+                      active: route().current('admin.users.*'),
+                      badge: 'ADMIN',
+                      icon: (
+                          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                              <circle cx="9" cy="7" r="4" />
+                              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                           </svg>
                       ),
                   },
               ]
-            : []),
-        {
-            name: 'Dashboard',
-            href: route('dashboard'),
-            active: route().current('dashboard'),
-            icon: (
-                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="7" height="9" x="3" y="3" rx="1" />
-                    <rect width="7" height="5" x="14" y="3" rx="1" />
-                    <rect width="7" height="9" x="14" y="12" rx="1" />
-                    <rect width="7" height="5" x="3" y="16" rx="1" />
-                </svg>
-            ),
-        },
+            : [
+                  {
+                      name: 'Dashboard',
+                      href: route('dashboard'),
+                      active: route().current('dashboard'),
+                      icon: (
+                          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect width="7" height="9" x="3" y="3" rx="1" />
+                              <rect width="7" height="5" x="14" y="3" rx="1" />
+                              <rect width="7" height="9" x="14" y="12" rx="1" />
+                              <rect width="7" height="5" x="3" y="16" rx="1" />
+                          </svg>
+                      ),
+                  },
+              ]),
         {
             name: 'Mi Empresa',
             href: route('company.edit'),
@@ -228,14 +262,47 @@ export default function AuthenticatedLayout({ header, children }) {
                         <span className="text-slate-400 group-hover:text-orange-500">👤</span>
                         Cuenta de Usuario
                     </Link>
-                    <Link
-                        href={route('home')}
-                        target="_blank"
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition group"
-                    >
-                        <span className="text-slate-400 group-hover:text-orange-500">🌐</span>
-                        Portal Público
-                    </Link>
+                    {company?.id ? (
+                        <>
+                            <Link
+                                href={route('companies.show', company.id)}
+                                target="_blank"
+                                onClick={() => setIsSidebarOpen(false)}
+                                className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-200/80 dark:border-blue-500/20 transition group"
+                                title="Ver el perfil público de tu empresa tal como lo ven tus clientes"
+                            >
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <span className="text-base shrink-0">🏪</span>
+                                    <span className="truncate">Ver Perfil Público</span>
+                                </div>
+                                <span className="text-xs text-blue-500 shrink-0">↗</span>
+                            </Link>
+
+                            <Link
+                                href={route('home')}
+                                target="_blank"
+                                onClick={() => setIsSidebarOpen(false)}
+                                className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition group"
+                                title="Ir a la página principal del Portal Público LDR"
+                            >
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-slate-400 group-hover:text-orange-500">🌐</span>
+                                    <span>Portal General LDR</span>
+                                </div>
+                                <span className="text-[11px] text-slate-400">↗</span>
+                            </Link>
+                        </>
+                    ) : (
+                        <Link
+                            href={route('home')}
+                            target="_blank"
+                            onClick={() => setIsSidebarOpen(false)}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition group"
+                        >
+                            <span className="text-slate-400 group-hover:text-orange-500">🌐</span>
+                            Portal Público
+                        </Link>
+                    )}
                 </div>
             </nav>
 

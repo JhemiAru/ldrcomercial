@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import DocumentPreviewModal from './Partials/DocumentPreviewModal';
 import NewDocumentModal from './Partials/NewDocumentModal';
 import {
@@ -17,11 +17,23 @@ export default function SalesIndex({
     initialQuotes = [],
     initialSales = [],
 }) {
+    const { flash } = usePage().props;
+
     const [quotes, setQuotes] = useState(initialQuotes);
     const [sales, setSales] = useState(initialSales);
     const [activeTab, setActiveTab] = useState('all'); // 'all' | 'quotes' | 'sales'
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Sincronizar estado local cuando las props de Inertia se actualicen desde MySQL
+    useEffect(() => {
+        setQuotes(initialQuotes);
+    }, [initialQuotes]);
+
+    useEffect(() => {
+        setSales(initialSales);
+    }, [initialSales]);
 
     // Estado del Modal de Vista Previa Oficial
     const [previewDoc, setPreviewDoc] = useState(null);
@@ -81,18 +93,18 @@ export default function SalesIndex({
         // Filtro por texto
         if (searchQuery.trim() !== '') {
             const query = searchQuery.toLowerCase();
-            const matchId = doc.id.toLowerCase().includes(query);
+            const matchId = (doc.doc_number || doc.id || '').toLowerCase().includes(query);
             const matchClient = (doc.client_name || '').toLowerCase().includes(query);
             const matchNit = (doc.client_nit || '').includes(query);
             const matchCity = (doc.client_city || '').toLowerCase().includes(query);
-            const matchItem = doc.items.some((it) => it.name.toLowerCase().includes(query));
+            const matchItem = doc.items.some((it) => (it.name || '').toLowerCase().includes(query));
             return matchId || matchClient || matchNit || matchCity || matchItem;
         }
 
         return true;
     });
 
-    // Cálculos de KPIs
+    // Cálculos de KPIs financieros
     const totalSalesAmount = sales.reduce((acc, s) => {
         const { grandTotal } = calculateDocumentTotals(s.items, false);
         return acc + grandTotal;
@@ -103,7 +115,7 @@ export default function SalesIndex({
         return acc + grandTotal;
     }, 0);
 
-    const approvedQuotesCount = quotes.filter((q) => q.status === 'approved').length;
+    const approvedQuotesCount = quotes.filter((q) => q.status === 'approved' || q.status === 'converted').length;
     const approvalRate = quotes.length > 0 ? Math.round((approvedQuotesCount / quotes.length) * 100) : 0;
 
     // Manejador para abrir vista previa
@@ -112,50 +124,79 @@ export default function SalesIndex({
         setIsPreviewOpen(true);
     };
 
-    // Manejador para convertir cotización a venta
-    const handleConvertToSale = (quoteId) => {
-        const quote = quotes.find((q) => q.id === quoteId);
-        if (!quote) return;
-
-        // Remover de cotizaciones o marcar como aprobada/convertida
-        setQuotes(quotes.map((q) => (q.id === quoteId ? { ...q, status: 'approved' } : q)));
-
-        // Crear nueva venta
-        const saleDoc = {
-            ...quote,
-            id: `VEN-2026-${Math.floor(1000 + Math.random() * 9000)}`,
-            doc_type: 'sale',
-            status: 'completed',
-            title: `Venta Concretada desde ${quote.id}`,
-            date: new Date().toISOString().split('T')[0],
-            payment_terms: 'Pagado al Contado / Transferencia QR',
-        };
-
-        setSales([saleDoc, ...sales]);
-    };
-
-    // Manejador para crear un nuevo documento
-    const handleCreateDocument = (newDoc, openPreviewImmediately = false) => {
-        if (newDoc.doc_type === 'quotation') {
-            setQuotes([newDoc, ...quotes]);
-        } else {
-            setSales([newDoc, ...sales]);
+    // Manejador para convertir cotización a venta persistente en MySQL
+    const handleConvertToSale = (quoteIdentifier) => {
+        if (!confirm(`¿Deseas convertir la cotización ${quoteIdentifier} en una venta oficial concretada? Se creará una nota de venta en MySQL.`)) {
+            return;
         }
 
-        if (openPreviewImmediately) {
-            handleOpenPreview(newDoc);
-        }
-    };
-
-    // Eliminar documento
-    const handleDeleteDocument = (id, docType) => {
-        if (confirm(`¿Estás seguro de eliminar el registro ${id}?`)) {
-            if (docType === 'quotation') {
-                setQuotes(quotes.filter((q) => q.id !== id));
-            } else {
-                setSales(sales.filter((s) => s.id !== id));
+        router.post(
+            route('sales.convert', quoteIdentifier),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: (page) => {
+                    // Si el modal de vista previa estaba abierto, actualizarlo
+                    if (previewDoc && (previewDoc.id === quoteIdentifier || previewDoc.doc_number === quoteIdentifier)) {
+                        setPreviewDoc((prev) => ({
+                            ...prev,
+                            doc_type: 'sale',
+                            status: 'completed',
+                            id: prev.id.replace('COT', 'VEN'),
+                        }));
+                    }
+                },
+                onError: () => {
+                    alert('No se pudo convertir la cotización a venta.');
+                },
             }
+        );
+    };
+
+    // Manejador para crear un nuevo documento en la base de datos
+    const handleCreateDocument = (payload, openPreviewImmediately = false) => {
+        setIsSubmitting(true);
+        router.post(route('sales.store'), payload, {
+            preserveScroll: true,
+            onSuccess: (page) => {
+                setIsSubmitting(false);
+                setIsNewDocOpen(false);
+
+                if (openPreviewImmediately) {
+                    const isQuote = payload.doc_type === 'quotation';
+                    const list = isQuote ? page.props.initialQuotes : page.props.initialSales;
+                    if (list && list.length > 0) {
+                        handleOpenPreview(list[0]);
+                    }
+                }
+            },
+            onError: (errors) => {
+                setIsSubmitting(false);
+                const errStr = Object.values(errors).join('\n');
+                alert(`Error al registrar documento:\n${errStr}`);
+            },
+        });
+    };
+
+    // Eliminar documento de MySQL
+    const handleDeleteDocument = (identifier) => {
+        if (confirm(`¿Estás seguro de eliminar el registro #${identifier} de la base de datos? Esta acción eliminará permanentemente el documento y sus partidas.`)) {
+            router.delete(route('sales.destroy', identifier), {
+                preserveScroll: true,
+                onError: () => {
+                    alert('No se pudo eliminar el documento de la base de datos.');
+                },
+            });
         }
+    };
+
+    // Actualizar estado del documento
+    const handleStatusChange = (identifier, newStatus) => {
+        router.patch(
+            route('sales.status', identifier),
+            { status: newStatus },
+            { preserveScroll: true }
+        );
     };
 
     return (
@@ -168,11 +209,11 @@ export default function SalesIndex({
                                 Ventas y Cotizaciones
                             </h1>
                             <span className="text-xs font-bold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-500/10 px-2.5 py-0.5 rounded-full border border-orange-200 dark:border-orange-500/20">
-                                Módulo Comercial
+                                Sistema Financiero MySQL
                             </span>
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            Gestión comercial, proformas B2B, notas de venta y vista previa oficial para <strong className="text-slate-700 dark:text-slate-200">{company?.name || 'tu negocio'}</strong>
+                            Gestión comercial, proformas B2B, notas de venta y flujo de caja para <strong className="text-slate-700 dark:text-slate-200">{company?.name || 'tu negocio'}</strong>
                         </p>
                     </div>
 
@@ -206,6 +247,16 @@ export default function SalesIndex({
             <Head title="Ventas y Cotizaciones - LDR Comercial" />
 
             <div className="py-8 space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Mensaje Flash de Notificación */}
+                {flash?.success && (
+                    <div className="p-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-2xl flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                        <div className="flex items-center gap-2">
+                            <span>✓</span>
+                            <span>{flash.success}</span>
+                        </div>
+                    </div>
+                )}
+
                 {/* ═══════════════════════════════════════════════
                     METRICS & KPIS COMERCIALES (BOLIVIA)
                    ═══════════════════════════════════════════════ */}
@@ -379,10 +430,11 @@ export default function SalesIndex({
                                         const isQuotation = doc.doc_type === 'quotation';
                                         const { grandTotal } = calculateDocumentTotals(doc.items, false);
                                         const badge = getStatusBadge(doc.status, doc.doc_type);
+                                        const docIdentifier = doc.doc_number || doc.id;
 
                                         return (
                                             <tr
-                                                key={doc.id}
+                                                key={docIdentifier}
                                                 className="hover:bg-slate-50/80 dark:hover:bg-white/5 transition"
                                             >
                                                 {/* Folio y Tipo */}
@@ -393,7 +445,7 @@ export default function SalesIndex({
                                                         </span>
                                                         <div>
                                                             <div className="font-mono font-black text-slate-900 dark:text-white">
-                                                                {doc.id}
+                                                                {docIdentifier}
                                                             </div>
                                                             <div className="text-[10px] text-slate-400 uppercase font-bold">
                                                                 {isQuotation ? 'Cotización B2B' : 'Nota de Venta'}
@@ -428,7 +480,7 @@ export default function SalesIndex({
                                                 {/* Ítems */}
                                                 <td className="px-5 py-3.5">
                                                     <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] bg-slate-100 dark:bg-white/10 font-bold text-slate-700 dark:text-slate-300">
-                                                        {doc.items.length} {doc.items.length === 1 ? 'producto' : 'productos'}
+                                                        {doc.items.length} {doc.items.length === 1 ? 'ítem' : 'ítems'}
                                                     </span>
                                                 </td>
 
@@ -439,23 +491,38 @@ export default function SalesIndex({
                                                     </div>
                                                 </td>
 
-                                                {/* Estado */}
+                                                {/* Estado con Selector Rápido */}
                                                 <td className="px-5 py-3.5">
-                                                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
-                                                        {badge.label}
-                                                    </span>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}>
+                                                            <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`}></span>
+                                                            {badge.label}
+                                                        </span>
+                                                    </div>
                                                 </td>
 
                                                 {/* Botones de Acción */}
                                                 <td className="px-5 py-3.5 text-right">
                                                     <div className="flex items-center justify-end gap-1.5">
+                                                        {/* CONVERTIR A VENTA DIRECTA (Si es cotización pendiente) */}
+                                                        {isQuotation && doc.status !== 'approved' && doc.status !== 'converted' && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleConvertToSale(docIdentifier)}
+                                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
+                                                                title="Convertir esta cotización en una venta oficial cerrada"
+                                                            >
+                                                                <span>⚡</span>
+                                                                <span>Vender</span>
+                                                            </button>
+                                                        )}
+
                                                         {/* BOTÓN PROMINENTE DE VISTA PREVIA */}
                                                         <button
                                                             type="button"
                                                             onClick={() => handleOpenPreview(doc)}
                                                             className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-bold shadow-xs transition"
-                                                            title="Abrir vista previa oficial, membretada y lista para imprimir"
+                                                            title="Abrir vista previa oficial, membretada y lista para imprimir o exportar"
                                                         >
                                                             <span>👁️</span>
                                                             <span>Vista Previa</span>
@@ -472,12 +539,12 @@ export default function SalesIndex({
                                                             💬
                                                         </a>
 
-                                                        {/* Eliminar */}
+                                                        {/* Eliminar de MySQL */}
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleDeleteDocument(doc.id, doc.doc_type)}
+                                                            onClick={() => handleDeleteDocument(docIdentifier)}
                                                             className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition"
-                                                            title="Eliminar"
+                                                            title="Eliminar de la base de datos"
                                                         >
                                                             🗑️
                                                         </button>
@@ -496,7 +563,7 @@ export default function SalesIndex({
                                 No se encontraron documentos
                             </h4>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-                                No hay cotizaciones o ventas que coincidan con los filtros aplicados.
+                                No hay cotizaciones o ventas que coincidan con los filtros aplicados en la base de datos.
                             </p>
                             <button
                                 type="button"
@@ -530,8 +597,8 @@ export default function SalesIndex({
                 catalogProducts={catalogProducts}
                 company={company}
                 onCreateDocument={handleCreateDocument}
+                isSubmitting={isSubmitting}
             />
         </AuthenticatedLayout>
     );
 }
-

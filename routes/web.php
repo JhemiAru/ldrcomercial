@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\CompanyAccountController;
+use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProductController;
@@ -60,12 +62,17 @@ Route::get('/empresas', function (Request $request) {
 })->name('companies.index');
 Route::get('/empresas/{id}', function ($id) {
     $company = Company::with(['category', 'products' => function($q) {
-        $q->where('status', 'published')->take(6);
+        $q->where('status', 'published')->with('category')->latest();
     }, 'events' => function($q) {
-        $q->where('status', 'active')->take(3);
+        $q->where('status', 'active')->latest()->take(10);
     }])->findOrFail($id);
 
-    if (!$company->is_active || !$company->is_verified) abort(404);
+    $authUser = auth()->user();
+    $isOwnerOrAdmin = $authUser && ($authUser->isAdmin() || $authUser->id === $company->user_id);
+
+    if ((!$company->is_active || !$company->is_verified) && !$isOwnerOrAdmin) {
+        abort(404);
+    }
 
     return Inertia::render('Companies/Show', [
         'company' => $company,
@@ -97,8 +104,27 @@ Route::get('/eventos', function () {
     ]);
 })->name('events.public');
 
+// Redirección amigable si se ingresa en español por /productos/create
+Route::get('/productos/create', function () {
+    return redirect()->route('products.create');
+});
+
+// Redirección amigable si se ingresa por /productos/{id}/edit
+Route::get('/productos/{id}/edit', function ($id) {
+    return redirect()->route('products.edit', $id);
+});
+
+// Redirección amigable si se ingresa por /productos
+Route::get('/productos', function () {
+    return redirect()->route('products.index');
+});
+
 // Detalle Público de Producto (Laravel / Blade nativo)
 Route::get('/productos/{id}', function ($id) {
+    if ($id === 'create') {
+        return redirect()->route('products.create');
+    }
+
     $product = Product::with(['company.category', 'category'])
         ->where('status', 'published')
         ->where(function($q) use ($id) {
@@ -125,7 +151,7 @@ Route::get('/productos/{id}', function ($id) {
         ->get();
 
     return view('products.show', compact('product', 'relatedProducts', 'companyProducts'));
-})->name('products.show');
+})->where('id', '^(?!create$)[a-zA-Z0-9\-_]+$')->name('products.show');
 
 // Redirección amigable si se ingresa por /products/{id}
 Route::get('/products/{id}', function ($id) {
@@ -141,6 +167,12 @@ Route::get('/afiliacion', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function (Request $request) {
         $user = $request->user();
+
+        // Si es Administrador, redirige a su panel maestro de control
+        if ($user->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         $company = $user->company()->with('category')->first();
         $companies = $user->companies()->with('category')->get();
 
@@ -168,21 +200,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
     Route::post('/company', [CompanyController::class, 'update'])->name('company.update');
 
-    // Gestión de Productos y Precios
-    Route::resource('products', ProductController::class)->except(['show']);
+    // Gestión de Productos y Precios (Soporta /products y /productos)
+    Route::match(['put', 'patch', 'post'], '/products/{product}', [ProductController::class, 'update'])->name('products.update');
+    Route::resource('products', ProductController::class)->except(['show', 'update']);
+    Route::get('/productos/create', [ProductController::class, 'create']);
+    Route::get('/productos', [ProductController::class, 'index']);
+    Route::get('/productos/{product}/edit', [ProductController::class, 'edit']);
+    Route::match(['put', 'patch', 'post'], '/productos/{product}', [ProductController::class, 'update']);
 
     // Gestión de Eventos y Promociones
     Route::resource('events', EventController::class);
 
     // Gestión de Ventas y Cotizaciones
     Route::get('/ventas-cotizaciones', [SalesController::class, 'index'])->name('sales.index');
+    Route::post('/ventas-cotizaciones', [SalesController::class, 'store'])->name('sales.store');
+    Route::post('/ventas-cotizaciones/{id}/convert', [SalesController::class, 'convertToSale'])->name('sales.convert');
+    Route::patch('/ventas-cotizaciones/{id}/status', [SalesController::class, 'updateStatus'])->name('sales.status');
+    Route::delete('/ventas-cotizaciones/{id}', [SalesController::class, 'destroy'])->name('sales.destroy');
 
     // Panel Administrador: Gestión de Cuentas de Compañías & Restablecimiento de Contraseñas
     Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/companies', [CompanyAccountController::class, 'index'])->name('companies.index');
         Route::post('/companies', [CompanyAccountController::class, 'store'])->name('companies.store');
+        Route::match(['put', 'post'], '/companies/{company}', [CompanyAccountController::class, 'update'])->name('companies.update');
+        Route::delete('/companies/{company}', [CompanyAccountController::class, 'destroy'])->name('companies.destroy');
         Route::post('/users/{user}/reset-password', [CompanyAccountController::class, 'resetPassword'])->name('users.reset-password');
         Route::post('/companies/{company}/toggle-verification', [CompanyAccountController::class, 'toggleVerification'])->name('companies.toggle-verification');
+
+        // Gestión Integral de Usuarios (Ver, Crear, Editar, Eliminar)
+        Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
+        Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
     });
 
     // Perfil de Usuario
