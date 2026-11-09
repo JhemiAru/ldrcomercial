@@ -48,6 +48,12 @@ export default function Header({
     };
 
     const userMenuRef = useRef(null);
+    const searchContainerRef = useRef(null);
+
+    // Sugerencias de búsqueda en vivo (Predictive Autocomplete)
+    const [suggestions, setSuggestions] = useState({ products: [], companies: [], categories: [], total: 0 });
+    const [isSearching, setIsSearching] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
 
     // Cerrar dropdown al hacer click fuera
     useEffect(() => {
@@ -55,13 +61,44 @@ export default function Header({
             if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
                 setIsUserMenuOpen(false);
             }
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+                setShowSuggestions(false);
+            }
         }
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Petición debounce hacia el endpoint de sugerencias
+    useEffect(() => {
+        const query = searchQuery.trim();
+        if (searchScope !== 'global' || query.length < 2) {
+            setSuggestions({ products: [], companies: [], categories: [], total: 0 });
+            setShowSuggestions(false);
+            setIsSearching(false);
+            return;
+        }
+
+        setIsSearching(true);
+        const timer = setTimeout(() => {
+            fetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`)
+                .then((res) => res.json())
+                .then((data) => {
+                    setSuggestions(data);
+                    setShowSuggestions(true);
+                    setIsSearching(false);
+                })
+                .catch(() => {
+                    setIsSearching(false);
+                });
+        }, 250);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery, searchScope]);
+
     const handleSearch = (e) => {
         e.preventDefault();
+        setShowSuggestions(false);
         if (searchScope === 'company' && companyScope) {
             // Notificar a la vista de la empresa Show.jsx
             if (onCompanySearch) {
@@ -113,20 +150,20 @@ export default function Header({
                             </svg>
                         </button>
 
-                        {/* Logo Minimalista */}
-                        <Link href={route('home')} className="flex items-center gap-1.5 group">
+                        {/* Logo Minimalista (Usa <a> para salida limpia hacia la portada Blade) */}
+                        <a href={route('home')} className="flex items-center gap-1.5 group">
                             <span className="font-black text-xl sm:text-2xl tracking-tighter text-slate-900 dark:text-white flex items-center">
                                 LDR<span className="text-blue-600">.</span>
                             </span>
                             <span className="hidden sm:inline-block text-[10px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
                                 COMERCIAL
                             </span>
-                        </Link>
+                        </a>
                     </div>
 
-                    {/* PARTE CENTRAL: BUSCADOR GENERAL / ADAPTATIVO A LA EMPRESA */}
-                    <div className="flex-1 max-w-xl mx-auto">
-                        <form onSubmit={handleSearch} className="relative w-full">
+                    {/* PARTE CENTRAL: BUSCADOR GENERAL / ADAPTATIVO A LA EMPRESA CON SUGERENCIAS */}
+                    <div className="flex-1 max-w-xl mx-auto relative" ref={searchContainerRef}>
+                        <form onSubmit={handleSearch} className="relative w-full" autoComplete="off">
                             <div className="relative flex items-center w-full bg-slate-100/90 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 focus-within:bg-white dark:focus-within:bg-[#0b132b] border border-slate-200/90 dark:border-white/10 rounded-full py-1 pl-1.5 pr-2 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 dark:focus-within:ring-blue-500/20 transition shadow-inner">
                                 
                                 {/* Si estamos en contexto de empresa, selector de alcance (Scope) */}
@@ -159,6 +196,12 @@ export default function Header({
 
                                 <input
                                     type="text"
+                                    autoComplete="off"
+                                    onFocus={() => {
+                                        if (searchScope === 'global' && searchQuery.trim().length >= 2) {
+                                            setShowSuggestions(true);
+                                        }
+                                    }}
                                     placeholder={
                                         searchScope === 'company' && companyScope
                                             ? `Buscar productos en ${companyScope.name}...`
@@ -169,12 +212,23 @@ export default function Header({
                                     className="w-full bg-transparent border-none text-xs sm:text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-0 py-1.5 px-2.5"
                                 />
 
+                                {/* Spinner de carga */}
+                                {isSearching && (
+                                    <div className="text-blue-500 mr-1 animate-spin shrink-0">
+                                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    </div>
+                                )}
+
                                 {/* Botón Limpiar */}
                                 {searchQuery && (
                                     <button
                                         type="button"
                                         onClick={() => {
                                             setSearchQuery('');
+                                            setShowSuggestions(false);
                                             if (searchScope === 'company' && onCompanySearch) {
                                                 onCompanySearch('');
                                             }
@@ -217,6 +271,157 @@ export default function Header({
                                 </div>
                             )}
                         </form>
+
+                        {/* Menú de Sugerencias Flotante en Vivo */}
+                        {showSuggestions && searchScope === 'global' && searchQuery.trim().length >= 2 && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-[#0b132b]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/90 dark:border-white/10 overflow-hidden z-50 transition-all max-h-[75vh] sm:max-h-[460px] overflow-y-auto divide-y divide-slate-100 dark:divide-white/5 animate-fade-in text-left">
+                                {suggestions.total === 0 ? (
+                                    <div className="p-6 text-center text-slate-500 dark:text-slate-400">
+                                        <div className="text-2xl mb-1">🔍</div>
+                                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                            Sin sugerencias directas para "{searchQuery}"
+                                        </p>
+                                        <p className="text-[11px] mt-0.5">Prueba con otra palabra clave o busca en todo el catálogo comercial.</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowSuggestions(false);
+                                                router.get(route('companies.index'), { search: searchQuery });
+                                            }}
+                                            className="mt-3 inline-flex items-center gap-1 text-xs font-black text-blue-600 dark:text-blue-400 hover:underline"
+                                        >
+                                            Buscar en todo el directorio &rarr;
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Banner de Intención Inteligente */}
+                                        {suggestions.intent_label && (
+                                            <div className="px-3.5 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border-b border-blue-100 dark:border-white/10 flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-300">
+                                                <span>✨</span>
+                                                <span>{suggestions.intent_label}</span>
+                                            </div>
+                                        )}
+
+                                        {/* Categorías */}
+                                        {suggestions.categories?.length > 0 && (
+                                            <div className="p-2 bg-slate-50/50 dark:bg-white/[0.02]">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 block mb-1">
+                                                    Categorías & Rubros
+                                                </span>
+                                                <div className="space-y-0.5">
+                                                    {suggestions.categories.map((cat) => (
+                                                        <Link
+                                                            key={cat.id}
+                                                            href={cat.url}
+                                                            onClick={() => setShowSuggestions(false)}
+                                                            className="flex items-center justify-between px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-xs font-bold text-slate-700 dark:text-slate-200 transition"
+                                                        >
+                                                            <span className="flex items-center gap-2">
+                                                                <span>{cat.icon}</span>
+                                                                <span>{cat.name}</span>
+                                                            </span>
+                                                            <span className="text-[10px] text-slate-400 font-normal">
+                                                                {cat.products_count} productos
+                                                            </span>
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Productos */}
+                                        {suggestions.products?.length > 0 && (
+                                            <div className="p-2">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 block mb-1">
+                                                    Productos Coincidentes
+                                                </span>
+                                                <div className="space-y-1">
+                                                    {suggestions.products.map((p) => (
+                                                        <a
+                                                            key={p.id}
+                                                            href={p.url}
+                                                            onClick={() => setShowSuggestions(false)}
+                                                            className="flex items-center gap-3 p-2 rounded-xl hover:bg-blue-50/70 dark:hover:bg-white/10 transition group"
+                                                        >
+                                                            <img
+                                                                src={p.image || 'https://placehold.co/100x100/f8fafc/94a3b8?text=LDR'}
+                                                                alt={p.name}
+                                                                className="w-10 h-10 rounded-lg object-cover bg-slate-100 shrink-0 border border-slate-200/70 dark:border-white/10"
+                                                            />
+                                                            <div className="min-w-0 flex-1">
+                                                                <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-blue-600 transition">
+                                                                    {p.name}
+                                                                </h4>
+                                                                <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                                                    {p.company_name && <span className="truncate">{p.company_name}</span>}
+                                                                    {p.category_name && <span>• {p.category_name}</span>}
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right shrink-0">
+                                                                <span className="text-xs font-black text-slate-900 dark:text-white font-mono">
+                                                                    {p.currency} {p.price}
+                                                                </span>
+                                                            </div>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Empresas */}
+                                        {suggestions.companies?.length > 0 && (
+                                            <div className="p-2">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 block mb-1">
+                                                    Empresas Verificadas
+                                                </span>
+                                                <div className="space-y-1">
+                                                    {suggestions.companies.map((c) => (
+                                                        <Link
+                                                            key={c.id}
+                                                            href={c.url}
+                                                            onClick={() => setShowSuggestions(false)}
+                                                            className="flex items-center gap-3 p-2 rounded-xl hover:bg-blue-50/70 dark:hover:bg-white/10 transition group"
+                                                        >
+                                                            <img
+                                                                src={c.logo || `https://placehold.co/100x100/0b132b/ffffff?text=${encodeURIComponent(c.name.substring(0, 2).toUpperCase())}`}
+                                                                alt={c.name}
+                                                                className="w-9 h-9 rounded-xl object-cover bg-slate-100 shrink-0 border border-slate-200/70 dark:border-white/10"
+                                                            />
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-blue-600 transition">
+                                                                        {c.name}
+                                                                    </h4>
+                                                                    <span className="text-blue-500 text-xs shrink-0" title="Empresa Verificada">✓</span>
+                                                                </div>
+                                                                <div className="text-[10px] text-slate-400 truncate">
+                                                                    {c.city && <span>📍 {c.city}</span>}
+                                                                    {c.category_name && <span> • {c.category_name}</span>}
+                                                                </div>
+                                                            </div>
+                                                            <span className="text-[11px] text-blue-600 font-bold group-hover:translate-x-0.5 transition-transform">&rarr;</span>
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Ver todos */}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowSuggestions(false);
+                                                router.get(route('companies.index'), { search: searchQuery });
+                                            }}
+                                            className="block w-full p-2.5 text-center bg-slate-50 dark:bg-white/[0.03] hover:bg-blue-50 dark:hover:bg-white/10 text-xs font-black text-blue-600 dark:text-blue-400 transition cursor-pointer"
+                                        >
+                                            Ver todos los resultados para "{searchQuery}" &rarr;
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* PARTE DERECHA: ICONO DE USUARIO (CON MENÚ O REDIRECCIÓN) */}
@@ -471,14 +676,14 @@ export default function Header({
                                 </div>
                                 <ul className="space-y-1">
                                     <li>
-                                        <Link 
+                                        <a 
                                             href={route('home')}
                                             onClick={() => setIsSidebarOpen(false)}
                                             className="flex items-center gap-3 px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white rounded-xl transition"
                                         >
                                             <span className="text-base">🏠</span>
                                             <span>Inicio</span>
-                                        </Link>
+                                        </a>
                                     </li>
                                     <li>
                                         <Link 
@@ -577,13 +782,13 @@ export default function Header({
                                     >
                                         Iniciar Sesión
                                     </Link>
-                                    <Link
+                                    <a
                                         href={route('afiliacion')}
                                         onClick={() => setIsSidebarOpen(false)}
                                         className="block w-full py-2 text-center text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-sm"
                                     >
                                         Afiliar mi Empresa (Verificación)
-                                    </Link>
+                                    </a>
                                 </div>
                             )}
                         </div>

@@ -11,9 +11,9 @@ export default function GuestLayout({ children }) {
                 <div className="absolute bottom-0 left-0 -ml-32 -mb-32 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none" />
 
                 <div className="relative z-10">
-                    <Link href="/" className="inline-flex items-center gap-2 text-white mb-12">
+                    <a href="/" className="inline-flex items-center gap-2 text-white mb-12">
                         <span className="font-black text-4xl tracking-tight">LDR<span className="text-orange-500">.</span></span>
-                    </Link>
+                    </a>
 
                     <h1 className="text-4xl xl:text-5xl font-black text-white leading-tight mb-6">
                         Impulsa tu alcance comercial en toda Bolivia.
@@ -40,9 +40,9 @@ export default function GuestLayout({ children }) {
             <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-24 bg-white relative">
                 {/* Logo móvil */}
                 <div className="lg:hidden absolute top-8 left-6 sm:left-12">
-                    <Link href="/" className="font-black text-3xl tracking-tight text-slate-900">
+                    <a href="/" className="font-black text-3xl tracking-tight text-slate-900">
                         LDR<span className="text-orange-500">.</span>
-                    </Link>
+                    </a>
                 </div>
 
                 <div className="w-full max-w-sm mx-auto">

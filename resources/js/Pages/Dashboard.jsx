@@ -189,12 +189,12 @@ export default function Dashboard({ company, companies = [], stats, recentProduc
                             >
                                 + Afiliar mi Empresa
                             </Link>
-                            <Link
+                            <a
                                 href={route('home')}
                                 className="w-full sm:w-auto px-5 py-3 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 text-slate-800 dark:text-white font-bold text-xs rounded-xl text-center transition"
                             >
                                 Explorar Catálogo
-                            </Link>
+                            </a>
                         </div>
                     </div>
                 )}

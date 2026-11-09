@@ -126,12 +126,12 @@ export default function Login({ status, canResetPassword }) {
                             <span>Registrar Usuario y Negocio</span>
                             <span>→</span>
                         </Link>
-                        <Link
+                        <a
                             href={route('afiliacion')}
                             className="font-bold text-slate-500 hover:text-slate-700 transition text-[11px]"
                         >
                             Conocer Proceso
-                        </Link>
+                        </a>
                     </div>
                 </div>
             </form>

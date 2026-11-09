@@ -36,14 +36,16 @@
             </a>
         </div>
 
-        <!-- PARTE CENTRAL: BUSCADOR GENERAL -->
-        <div class="flex-1 max-w-xl mx-auto">
-            <form action="{{ route('companies.index') }}" method="GET" class="relative w-full">
+        <!-- PARTE CENTRAL: BUSCADOR GENERAL CON SUGERENCIAS EN VIVO (PREDICTIVE AUTOCOMPLETE) -->
+        <div class="flex-1 max-w-xl mx-auto relative" id="blade-search-container">
+            <form action="{{ route('companies.index') }}" method="GET" class="relative w-full" id="blade-search-form" autocomplete="off">
                 <input 
                     type="text" 
+                    id="blade-search-input"
                     name="search" 
                     value="{{ request('search') }}"
                     placeholder="Buscar productos, empresas, marcas..." 
+                    autocomplete="off"
                     class="w-full bg-slate-100/90 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 focus:bg-white dark:focus:bg-[#0b132b] border border-slate-200/90 dark:border-white/10 rounded-full pl-10 pr-9 py-2 text-xs sm:text-sm text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-500/20 transition shadow-inner"
                 >
                 <button type="submit" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition" aria-label="Buscar">
@@ -51,7 +53,23 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </button>
+
+                <!-- Spinner indicador de búsqueda -->
+                <div id="blade-search-spinner" class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 pointer-events-none">
+                    <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
             </form>
+
+            <!-- Menú Flotante de Sugerencias en Vivo -->
+            <div 
+                id="blade-search-dropdown" 
+                class="hidden absolute left-0 right-0 top-full mt-2 bg-white/95 dark:bg-[#0b132b]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/90 dark:border-white/10 overflow-hidden z-50 transition-all max-h-[75vh] sm:max-h-[460px] overflow-y-auto divide-y divide-slate-100 dark:divide-white/5"
+            >
+                <!-- El contenido se inyecta dinámicamente mediante JavaScript -->
+            </div>
         </div>
 
         <!-- PARTE DERECHA: ICONO DE USUARIO (CON MENÚ O REDIRECCIÓN) -->
@@ -381,5 +399,236 @@
 
         // Sincronizar estado visual inicial
         updateUI(getCurrentTheme() === 'dark');
+
+        // ─── 4. Buscador con Sugerencias en Vivo (Predictive Autocomplete) ───
+        const searchInput = document.getElementById('blade-search-input');
+        const searchDropdown = document.getElementById('blade-search-dropdown');
+        const searchContainer = document.getElementById('blade-search-container');
+        const searchSpinner = document.getElementById('blade-search-spinner');
+        let searchDebounceTimer = null;
+        let selectedIndex = -1;
+
+        if (searchInput && searchDropdown) {
+            function escapeHtml(text) {
+                if (!text) return '';
+                const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+                return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+            }
+
+            function closeSuggestions() {
+                searchDropdown.classList.add('hidden');
+                selectedIndex = -1;
+            }
+
+            function renderSuggestions(data, term) {
+                const total = (data.products?.length || 0) + (data.companies?.length || 0) + (data.categories?.length || 0);
+
+                if (total === 0) {
+                    searchDropdown.innerHTML = `
+                        <div class="p-6 text-center text-slate-500 dark:text-slate-400">
+                            <div class="text-2xl mb-1">🔍</div>
+                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Sin sugerencias directas para "${escapeHtml(term)}"</p>
+                            <p class="text-[11px] mt-0.5">Prueba con otra palabra clave o busca en todo el catálogo comercial.</p>
+                            <a href="/empresas?search=${encodeURIComponent(term)}" class="mt-3 inline-flex items-center gap-1 text-xs font-black text-blue-600 dark:text-blue-400 hover:underline">
+                                Buscar en todo el directorio &rarr;
+                            </a>
+                        </div>
+                    `;
+                    searchDropdown.classList.remove('hidden');
+                    return;
+                }
+
+                let html = '';
+
+                // Banner de intención inteligente detectada
+                if (data.intent_label) {
+                    html += `
+                        <div class="px-3.5 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border-b border-blue-100 dark:border-white/10 flex items-center gap-2 text-xs font-bold text-blue-700 dark:text-blue-300">
+                            <span>✨</span>
+                            <span>${escapeHtml(data.intent_label)}</span>
+                        </div>
+                    `;
+                }
+
+                // Rubros / Categorías coincidentes
+                if (data.categories && data.categories.length > 0) {
+                    html += `
+                        <div class="p-2 bg-slate-50/50 dark:bg-white/[0.02]">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 block mb-1">
+                                Categorías & Rubros
+                            </span>
+                            <div class="space-y-0.5">
+                    `;
+                    data.categories.forEach(cat => {
+                        html += `
+                            <a href="${cat.url}" class="suggestion-item flex items-center justify-between px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-xs font-bold text-slate-700 dark:text-slate-200 transition">
+                                <span class="flex items-center gap-2">
+                                    <span>${escapeHtml(cat.icon)}</span>
+                                    <span>${escapeHtml(cat.name)}</span>
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-normal">${cat.products_count} productos</span>
+                            </a>
+                        `;
+                    });
+                    html += `</div></div>`;
+                }
+
+                // Productos coincidentes
+                if (data.products && data.products.length > 0) {
+                    html += `
+                        <div class="p-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 block mb-1">
+                                Productos Coincidentes
+                            </span>
+                            <div class="space-y-1">
+                    `;
+                    data.products.forEach(p => {
+                        const img = p.image || 'https://placehold.co/100x100/f8fafc/94a3b8?text=LDR';
+                        html += `
+                            <a href="${p.url}" class="suggestion-item flex items-center gap-3 p-2 rounded-xl hover:bg-blue-50/70 dark:hover:bg-white/10 transition group">
+                                <img src="${img}" alt="${escapeHtml(p.name)}" class="w-10 h-10 rounded-lg object-cover bg-slate-100 shrink-0 border border-slate-200/70 dark:border-white/10">
+                                <div class="min-w-0 flex-1">
+                                    <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-blue-600 transition">
+                                        ${escapeHtml(p.name)}
+                                    </h4>
+                                    <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                                        ${p.company_name ? `<span class="truncate">${escapeHtml(p.company_name)}</span>` : ''}
+                                        ${p.category_name ? `<span>• ${escapeHtml(p.category_name)}</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <span class="text-xs font-black text-slate-900 dark:text-white font-mono">
+                                        ${escapeHtml(p.currency)} ${escapeHtml(p.price)}
+                                    </span>
+                                </div>
+                            </a>
+                        `;
+                    });
+                    html += `</div></div>`;
+                }
+
+                // Empresas verificadas coincidentes
+                if (data.companies && data.companies.length > 0) {
+                    html += `
+                        <div class="p-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 block mb-1">
+                                Empresas Verificadas
+                            </span>
+                            <div class="space-y-1">
+                    `;
+                    data.companies.forEach(c => {
+                        const logo = c.logo || 'https://placehold.co/100x100/0b132b/ffffff?text=' + encodeURIComponent(c.name.substring(0, 2).toUpperCase());
+                        html += `
+                            <a href="${c.url}" class="suggestion-item flex items-center gap-3 p-2 rounded-xl hover:bg-blue-50/70 dark:hover:bg-white/10 transition group">
+                                <img src="${logo}" alt="${escapeHtml(c.name)}" class="w-9 h-9 rounded-xl object-cover bg-slate-100 shrink-0 border border-slate-200/70 dark:border-white/10">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-blue-600 transition">
+                                            ${escapeHtml(c.name)}
+                                        </h4>
+                                        <span class="text-blue-500 text-xs shrink-0" title="Empresa Verificada">✓</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 truncate">
+                                        ${c.city ? `<span>📍 ${escapeHtml(c.city)}</span>` : ''}
+                                        ${c.category_name ? `<span> • ${escapeHtml(c.category_name)}</span>` : ''}
+                                    </div>
+                                </div>
+                                <span class="text-[11px] text-blue-600 font-bold group-hover:translate-x-0.5 transition-transform">&rarr;</span>
+                            </a>
+                        `;
+                    });
+                    html += `</div></div>`;
+                }
+
+                // Enlace inferior para ver todos los resultados
+                html += `
+                    <a href="/empresas?search=${encodeURIComponent(term)}" class="block p-2.5 text-center bg-slate-50 dark:bg-white/[0.03] hover:bg-blue-50 dark:hover:bg-white/10 text-xs font-black text-blue-600 dark:text-blue-400 transition">
+                        Ver todos los resultados para "${escapeHtml(term)}" &rarr;
+                    </a>
+                `;
+
+                searchDropdown.innerHTML = html;
+                searchDropdown.classList.remove('hidden');
+                selectedIndex = -1;
+            }
+
+            searchInput.addEventListener('input', function () {
+                const query = searchInput.value.trim();
+
+                clearTimeout(searchDebounceTimer);
+
+                if (query.length < 2) {
+                    closeSuggestions();
+                    if (searchSpinner) searchSpinner.classList.add('hidden');
+                    return;
+                }
+
+                if (searchSpinner) searchSpinner.classList.remove('hidden');
+
+                searchDebounceTimer = setTimeout(function () {
+                    fetch('/api/search/suggestions?q=' + encodeURIComponent(query))
+                        .then(function (res) { return res.json(); })
+                        .then(function (data) {
+                            if (searchSpinner) searchSpinner.classList.add('hidden');
+                            if (searchInput.value.trim() === query) {
+                                renderSuggestions(data, query);
+                            }
+                        })
+                        .catch(function () {
+                            if (searchSpinner) searchSpinner.classList.add('hidden');
+                        });
+                }, 250);
+            });
+
+            // Navegación con teclado (Flechas y Enter)
+            searchInput.addEventListener('keydown', function (e) {
+                if (searchDropdown.classList.contains('hidden')) return;
+
+                const items = searchDropdown.querySelectorAll('.suggestion-item');
+                if (!items.length) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = (selectedIndex + 1) % items.length;
+                    highlightItem(items, selectedIndex);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+                    highlightItem(items, selectedIndex);
+                } else if (e.key === 'Enter') {
+                    if (selectedIndex >= 0 && items[selectedIndex]) {
+                        e.preventDefault();
+                        items[selectedIndex].click();
+                    }
+                } else if (e.key === 'Escape') {
+                    closeSuggestions();
+                }
+            });
+
+            function highlightItem(items, index) {
+                items.forEach(function (el, i) {
+                    if (i === index) {
+                        el.classList.add('bg-blue-100', 'dark:bg-blue-600/30');
+                        el.scrollIntoView({ block: 'nearest' });
+                    } else {
+                        el.classList.remove('bg-blue-100', 'dark:bg-blue-600/30');
+                    }
+                });
+            }
+
+            // Cerrar al hacer clic fuera
+            document.addEventListener('click', function (e) {
+                if (searchContainer && !searchContainer.contains(e.target)) {
+                    closeSuggestions();
+                }
+            });
+
+            // Reabrir si tiene contenido al hacer focus
+            searchInput.addEventListener('focus', function () {
+                if (searchInput.value.trim().length >= 2 && searchDropdown.innerHTML.trim() !== '') {
+                    searchDropdown.classList.remove('hidden');
+                }
+            });
+        }
     });
 </script>

@@ -54,6 +54,11 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isBuyer(): bool
+    {
+        return $this->role === 'buyer';
+    }
+
     public function company(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Company::class);

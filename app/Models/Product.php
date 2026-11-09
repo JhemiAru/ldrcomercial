@@ -18,6 +18,7 @@ class Product extends Model
         'sku',
         'short_description',
         'description',
+        'tags',
         'price',
         'original_price',
         'wholesale_price',

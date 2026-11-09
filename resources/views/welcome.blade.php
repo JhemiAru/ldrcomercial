@@ -63,74 +63,35 @@
     >
         <!-- Contenedor con altura proporcional para banners limpios -->
         <div class="relative w-full h-[240px] sm:h-[360px] md:h-[460px] lg:h-[540px] xl:h-[600px] overflow-hidden">
-            
-            <!-- SLIDE 1 (Banner 1 -> Categoría Ferretería) -->
-            <a 
-                href="{{ route('companies.index', ['search' => 'Ferretería']) }}"
-                class="hero-slide absolute inset-0 block w-full h-full transition-opacity duration-700 ease-in-out opacity-100 z-10 cursor-pointer"
-                data-index="0"
-                title="Ver Categoría Ferretería y Herramientas"
-            >
-                <img 
-                    src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1920&auto=format&fit=crop&q=85" 
-                    alt="Banner Ferretería y Herramientas"
-                    class="w-full h-full object-cover object-center"
-                    loading="eager"
-                >
-            </a>
-
-            <!-- SLIDE 2 (Banner 2 -> Empresa TechSolutions) -->
-            <a 
-                href="{{ route('companies.index', ['search' => 'TechSolutions']) }}"
-                class="hero-slide absolute inset-0 block w-full h-full transition-opacity duration-700 ease-in-out opacity-0 z-0 pointer-events-none cursor-pointer"
-                data-index="1"
-                title="Ver Empresa TechSolutions Bolivia"
-            >
-                <img 
-                    src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1920&auto=format&fit=crop&q=85" 
-                    alt="Banner TechSolutions Bolivia"
-                    class="w-full h-full object-cover object-center"
-                    loading="lazy"
-                >
-            </a>
-
-            <!-- SLIDE 3 (Banner 3 -> Directorio de Categorías) -->
-            <a 
-                href="{{ route('categories.index') }}"
-                class="hero-slide absolute inset-0 block w-full h-full transition-opacity duration-700 ease-in-out opacity-0 z-0 pointer-events-none cursor-pointer"
-                data-index="2"
-                title="Ver Todas las Categorías"
-            >
-                <img 
-                    src="https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=1920&auto=format&fit=crop&q=85" 
-                    alt="Banner Automatización y Robótica"
-                    class="w-full h-full object-cover object-center"
-                    loading="lazy"
-                >
-            </a>
-
-            <!-- SLIDE 4 (Banner 4 -> Empresa ConstruSur) -->
-            <a 
-                href="{{ route('companies.index', ['search' => 'ConstruSur']) }}"
-                class="hero-slide absolute inset-0 block w-full h-full transition-opacity duration-700 ease-in-out opacity-0 z-0 pointer-events-none cursor-pointer"
-                data-index="3"
-                title="Ver Empresa ConstruSur Materiales"
-            >
-                <img 
-                    src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1920&auto=format&fit=crop&q=85" 
-                    alt="Banner ConstruSur Materiales"
-                    class="w-full h-full object-cover object-center"
-                    loading="lazy"
-                >
-            </a>
-
+            @if(isset($banners) && count($banners) > 0)
+                @foreach($banners as $index => $banner)
+                    <a 
+                        href="{{ $banner->link ?: '#' }}"
+                        class="hero-slide absolute inset-0 block w-full h-full transition-opacity duration-700 ease-in-out {{ $index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none' }} cursor-pointer"
+                        data-index="{{ $index }}"
+                        title="{{ $banner->title }}"
+                    >
+                        <img 
+                            src="{{ str_starts_with($banner->image, 'http') ? $banner->image : asset($banner->image) }}" 
+                            alt="{{ $banner->title }}"
+                            class="w-full h-full object-cover object-center"
+                            loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
+                        >
+                    </a>
+                @endforeach
+            @else
+                <div class="hero-slide absolute inset-0 block w-full h-full bg-slate-900 opacity-100 z-10 flex items-center justify-center text-white">
+                    <p class="text-sm font-bold">LDR Comercial Bolivia - Proveedor Industrial</p>
+                </div>
+            @endif
         </div>
 
+        @if(isset($banners) && count($banners) > 1)
         <!-- Flechas de Navegación Flotantes (Izquierda y Derecha) -->
         <button
             type="button"
             id="hero-prev-btn"
-            class="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg hover:scale-105 opacity-80 group-hover:opacity-100 focus:outline-none"
+            class="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg hover:scale-105 opacity-80 group-hover:opacity-100 focus:outline-none cursor-pointer"
             aria-label="Banner anterior"
             title="Banner anterior"
         >
@@ -142,7 +103,7 @@
         <button
             type="button"
             id="hero-next-btn"
-            class="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg hover:scale-105 opacity-80 group-hover:opacity-100 focus:outline-none"
+            class="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg hover:scale-105 opacity-80 group-hover:opacity-100 focus:outline-none cursor-pointer"
             aria-label="Banner siguiente"
             title="Banner siguiente"
         >
@@ -153,11 +114,11 @@
 
         <!-- Barra Inferior: Indicadores de Puntos -->
         <div class="absolute bottom-3 sm:bottom-5 left-0 right-0 z-30 flex items-center justify-center gap-2" id="hero-dots-container">
-            <button type="button" class="hero-dot transition-all duration-300 rounded-full focus:outline-none w-8 sm:w-10 h-2 sm:h-2.5 bg-blue-500 shadow-sm shadow-blue-400" data-index="0" aria-label="Banner 1"></button>
-            <button type="button" class="hero-dot transition-all duration-300 rounded-full focus:outline-none w-2 sm:w-2.5 h-2 sm:h-2.5 bg-white/60 hover:bg-white shadow-xs" data-index="1" aria-label="Banner 2"></button>
-            <button type="button" class="hero-dot transition-all duration-300 rounded-full focus:outline-none w-2 sm:w-2.5 h-2 sm:h-2.5 bg-white/60 hover:bg-white shadow-xs" data-index="2" aria-label="Banner 3"></button>
-            <button type="button" class="hero-dot transition-all duration-300 rounded-full focus:outline-none w-2 sm:w-2.5 h-2 sm:h-2.5 bg-white/60 hover:bg-white shadow-xs" data-index="3" aria-label="Banner 4"></button>
+            @foreach($banners as $index => $banner)
+                <button type="button" class="hero-dot transition-all duration-300 rounded-full focus:outline-none {{ $index === 0 ? 'w-8 sm:w-10 h-2 sm:h-2.5 bg-blue-500 shadow-sm shadow-blue-400' : 'w-2 sm:w-2.5 h-2 sm:h-2.5 bg-white/60 hover:bg-white shadow-xs' }} cursor-pointer" data-index="{{ $index }}" aria-label="Banner {{ $index + 1 }}"></button>
+            @endforeach
         </div>
+        @endif
 
         <!-- Barra de Estadísticas y Confianza -->
         <div class="relative z-20 border-t border-white/10 bg-slate-950/80 backdrop-blur-md py-3 sm:py-4">

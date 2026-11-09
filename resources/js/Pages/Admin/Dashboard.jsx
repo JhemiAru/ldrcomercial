@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import CreateCompanyModal from './Companies/Partials/CreateCompanyModal';
 import UsersTable from './Users/Partials/UsersTable';
+import BannersManager from './Banners/BannersManager';
 
 export default function AdminDashboard({
     metrics = {},
@@ -12,17 +13,21 @@ export default function AdminDashboard({
     citiesDistribution = [],
     categories = [],
     users = [],
+    banners = [],
 }) {
     const { auth, flash } = usePage().props;
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-    // Pestaña activa ('resumen' | 'usuarios') con soporte de query param ?tab=usuarios
+    // Pestaña activa ('resumen' | 'usuarios' | 'banners') con soporte de query param ?tab=...
     const [activeTab, setActiveTab] = useState(() => {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
             const tabParam = params.get('tab');
             if (tabParam === 'usuarios' || tabParam === 'users') {
                 return 'usuarios';
+            }
+            if (tabParam === 'banners' || tabParam === 'carrusel') {
+                return 'banners';
             }
         }
         return 'resumen';
@@ -75,6 +80,19 @@ export default function AdminDashboard({
                             <span>{activeTab === 'usuarios' ? 'Ver Resumen' : `Gestionar Usuarios (${users.length})`}</span>
                         </button>
 
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('banners')}
+                            className={`px-3.5 py-2 font-bold text-xs rounded-xl transition flex items-center gap-1.5 border cursor-pointer ${
+                                activeTab === 'banners'
+                                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                                    : 'bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
+                            }`}
+                        >
+                            <span>🖼️</span>
+                            <span>Editar Carrusel ({banners.length})</span>
+                        </button>
+
                         <Link
                             href={route('admin.companies.index')}
                             className="px-3.5 py-2 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30 font-bold text-xs rounded-xl transition flex items-center gap-1.5"
@@ -83,14 +101,14 @@ export default function AdminDashboard({
                             <span>Administrar Empresas</span>
                         </Link>
 
-                        <Link
+                        <a
                             href={route('home')}
                             target="_blank"
                             className="px-3.5 py-2 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 font-bold text-xs rounded-xl transition flex items-center gap-1.5"
                         >
                             <span>🌐</span>
                             <span>Ver Portal</span>
-                        </Link>
+                        </a>
                     </div>
                 </div>
             }
@@ -135,7 +153,7 @@ export default function AdminDashboard({
                         <button
                             type="button"
                             onClick={() => setActiveTab('usuarios')}
-                            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 ${
+                            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
                                 activeTab === 'usuarios'
                                     ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                                     : 'bg-white dark:bg-[#0b132b] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5'
@@ -149,6 +167,26 @@ export default function AdminDashboard({
                                     : 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300'
                             }`}>
                                 {users.length}
+                            </span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('banners')}
+                            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                                activeTab === 'banners'
+                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                                    : 'bg-white dark:bg-[#0b132b] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5'
+                            }`}
+                        >
+                            <span>🖼️</span>
+                            <span>Carrusel de Portada</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                                activeTab === 'banners'
+                                    ? 'bg-white/20 text-white'
+                                    : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+                            }`}>
+                                {banners.length}
                             </span>
                         </button>
                     </div>
@@ -170,6 +208,15 @@ export default function AdminDashboard({
                 {activeTab === 'usuarios' && (
                     <div className="animate-fade-in space-y-6">
                         <UsersTable users={users} />
+                    </div>
+                )}
+
+                {/* ═══════════════════════════════════════════════
+                    VISTA 2: CARRUSEL DE PORTADA (TAB 'banners')
+                   ═══════════════════════════════════════════════ */}
+                {activeTab === 'banners' && (
+                    <div className="animate-fade-in space-y-6">
+                        <BannersManager banners={banners} />
                     </div>
                 )}
 

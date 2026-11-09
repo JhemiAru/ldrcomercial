@@ -35,11 +35,6 @@ class SalesController extends Controller
             ->select(['id', 'name', 'sku', 'price', 'wholesale_price', 'currency', 'unit', 'main_image'])
             ->get();
 
-        // Si la empresa aún no tiene ningún documento registrado, sembramos datos iniciales en MySQL
-        if ($company->commercialDocuments()->count() === 0) {
-            $this->seedInitialDocuments($company);
-        }
-
         // Obtener cotizaciones y ventas con sus ítems
         $documents = $company->commercialDocuments()
             ->with(['items.product'])

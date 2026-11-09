@@ -12,6 +12,7 @@ export default function EditProduct({ product, categories = [] }) {
         name: product.name || '',
         category_id: product.category_id || '',
         sku: product.sku || '',
+        tags: product.tags || '',
         short_description: product.short_description || '',
         description: product.description || '',
         price: product.price || '',
@@ -274,12 +275,12 @@ export default function EditProduct({ product, categories = [] }) {
                                             ref={fileInputRef}
                                             type="file"
                                             id="main_image"
-                                            accept="image/png, image/jpeg, image/jpg, image/webp"
+                                            accept="image/*, image/png, image/jpeg, image/jpg, image/webp"
                                             onChange={handleFileChange}
-                                            className="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 dark:file:bg-white/10 file:text-white hover:file:bg-slate-800 cursor-pointer"
+                                            className="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-600 hover:file:bg-blue-700 file:text-white cursor-pointer"
                                         />
                                         <p className="text-[11px] text-slate-400">
-                                            Acepta JPG, PNG, WEBP de hasta 8MB.
+                                            📸 Puedes tomar una foto directamente con la cámara del celular o seleccionar de la galería (JPG, PNG, WEBP). Se optimizará automáticamente.
                                         </p>
                                     </div>
                                 ) : (
@@ -534,6 +535,32 @@ export default function EditProduct({ product, categories = [] }) {
                                     placeholder="Describe dimensiones, peso, compatibilidad, accesorios incluidos..."
                                 />
                                 <InputError message={errors.description} />
+                            </div>
+
+                            {/* Etiquetas & Palabras Clave de Búsqueda Inteligente */}
+                            <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-500/10 border border-amber-200/80 dark:border-amber-500/20 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <InputLabel 
+                                        htmlFor="tags" 
+                                        value="🏷️ Palabras Clave de Búsqueda Inteligente (Opcional)" 
+                                        className="text-amber-900 dark:text-amber-200 font-bold"
+                                    />
+                                    <span className="text-[10px] font-black uppercase text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/20 px-2 py-0.5 rounded">
+                                        IA & Posicionamiento
+                                    </span>
+                                </div>
+                                <TextInput
+                                    id="tags"
+                                    type="text"
+                                    className="mt-1 block w-full text-xs sm:text-sm"
+                                    value={data.tags}
+                                    onChange={(e) => setData('tags', e.target.value)}
+                                    placeholder="Ej: bajar de peso, adelgazar, quemar grasa, te verde, dieta, fitness"
+                                />
+                                <p className="text-[11px] text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
+                                    💡 <strong>Consejo para vender más:</strong> Escribe frases o necesidades separadas por comas (ej: <em>bajar de peso, celular gamer, económico, regalo para papá</em>). El buscador inteligente usará estas palabras para recomendar tu producto cuando los clientes busquen soluciones.
+                                </p>
+                                <InputError message={errors.tags} />
                             </div>
                         </div>
                     </div>

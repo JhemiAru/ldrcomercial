@@ -32,6 +32,8 @@ export default function Show({ company, categories }) {
     });
 
     const [showShareModal, setShowShareModal] = useState(false);
+    const [selectedBannerKey, setSelectedBannerKey] = useState('1'); // '1' | '2' | '3' | 'logo' | 'card'
+    const [sharingProduct, setSharingProduct] = useState(null);
     const [showMessageModal, setShowMessageModal] = useState(false);
     const [quickMessageText, setQuickMessageText] = useState(`Hola ${company.name}, te contacto a través de LDR Comercial Bolivia. Quisiera solicitar información y cotización sobre sus productos.`);
     const [toastMessage, setToastMessage] = useState('');
@@ -67,11 +69,34 @@ export default function Show({ company, categories }) {
         }
     };
 
+    const getShareUrl = (bannerKey = selectedBannerKey) => {
+        if (typeof window === 'undefined') return `http://localhost:8000/empresas/${company.id}`;
+        const base = `${window.location.origin}/empresas/${company.id}`;
+        return bannerKey === '1' ? base : `${base}?banner=${bannerKey}`;
+    };
+
     const handleCopyPageUrl = () => {
         if (typeof window !== 'undefined' && navigator.clipboard) {
-            navigator.clipboard.writeText(window.location.href);
+            navigator.clipboard.writeText(getShareUrl(selectedBannerKey));
             setCopied(true);
-            triggerToast('🔗 ¡Enlace copiado al portapapeles!');
+            triggerToast('🔗 ¡Enlace del flyer copiado al portapapeles!');
+            setTimeout(() => setCopied(false), 2500);
+        }
+    };
+
+    const getProductShareUrl = (prod) => {
+        if (!prod) return '';
+        if (typeof window !== 'undefined') {
+            return `${window.location.origin}/productos/${prod.id}`;
+        }
+        return `http://localhost:8000/productos/${prod.id}`;
+    };
+
+    const handleCopyProductUrl = (prod) => {
+        if (typeof window !== 'undefined' && navigator.clipboard) {
+            navigator.clipboard.writeText(getProductShareUrl(prod));
+            setCopied(true);
+            triggerToast(`🔗 ¡Enlace de "${prod.name}" copiado!`);
             setTimeout(() => setCopied(false), 2500);
         }
     };
@@ -213,7 +238,19 @@ export default function Show({ company, categories }) {
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-blue-600 selection:text-white">
-            <Head title={`${company.name} - Proveedor Verificado B2B | LDR Comercial`} />
+            <Head>
+                <title>{`${company.name} - Proveedor Verificado B2B | LDR Comercial`}</title>
+                <meta property="og:title" content={`${company.name} - Catálogo Oficial en LDR Comercial`} />
+                <meta property="og:description" content={company.short_description || company.description?.slice(0, 150) || `Explora el catálogo de productos y contacto directo de ${company.name} en Bolivia.`} />
+                <meta property="og:image" content={route('companies.og-image', company.id)} />
+                <meta property="og:image:width" content="1200" />
+                <meta property="og:image:height" content="630" />
+                <meta property="og:type" content="website" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={`${company.name} - Catálogo Oficial en LDR Comercial`} />
+                <meta name="twitter:description" content={company.short_description || company.description?.slice(0, 150) || `Explora el catálogo de productos y contacto directo de ${company.name} en Bolivia.`} />
+                <meta name="twitter:image" content={route('companies.og-image', company.id)} />
+            </Head>
             <Header 
                 categories={categories}
                 companyScope={company}
@@ -464,6 +501,19 @@ export default function Show({ company, categories }) {
                                         onError={(e) => { e.currentTarget.src = fallbackImage; }}
                                     />
                                     
+                                    {/* Botón flotante para compartir este flyer específico en WhatsApp */}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedBannerKey(String(idx + 1));
+                                            setShowShareModal(true);
+                                        }}
+                                        className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950/75 hover:bg-emerald-600 text-white backdrop-blur-md text-[11px] font-bold border border-white/20 shadow-lg transition opacity-0 group-hover:opacity-100 cursor-pointer"
+                                        title="Compartir este flyer en WhatsApp"
+                                    >
+                                        <span>📲 Compartir Flyer</span>
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -688,7 +738,7 @@ export default function Show({ company, categories }) {
                                                 className="bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-blue-400/50 transition-all duration-300 overflow-hidden flex flex-col group"
                                             >
                                                 {/* Imagen Compacta del Producto */}
-                                                <Link 
+                                                <a 
                                                     href={route('products.show', prod.id)}
                                                     className="h-36 sm:h-40 relative overflow-hidden bg-slate-100 block cursor-pointer"
                                                 >
@@ -721,7 +771,7 @@ export default function Show({ company, categories }) {
                                                             {prod.in_stock !== false ? '● Stock' : '● Pedido'}
                                                         </span>
                                                     </div>
-                                                </Link>
+                                                </a>
 
                                                 {/* Información Compacta */}
                                                 <div className="p-3 sm:p-3.5 flex flex-col flex-1 justify-between">
@@ -731,13 +781,13 @@ export default function Show({ company, categories }) {
                                                                 SKU: {prod.sku}
                                                             </span>
                                                         )}
-                                                        <Link 
+                                                        <a 
                                                             href={route('products.show', prod.id)}
                                                             className="font-bold text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug min-h-[2.2rem] block"
                                                             title={prod.name}
                                                         >
                                                             {prod.name}
-                                                        </Link>
+                                                        </a>
                                                     </div>
 
                                                     {/* Precios y Botones */}
@@ -774,13 +824,21 @@ export default function Show({ company, categories }) {
                                                                 <span>Cotizar</span>
                                                             </a>
 
-                                                            <Link
-                                                                href={route('products.show', prod.id)}
-                                                                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center justify-center shrink-0"
-                                                                title="Ver ficha técnica completa"
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSharingProduct(prod)}
+                                                                className="p-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-200/80 hover:border-blue-200 text-xs font-bold transition flex items-center justify-center shrink-0 cursor-pointer"
+                                                                title="Compartir este producto en WhatsApp y redes"
+                                                                aria-label={`Compartir ${prod.name}`}
                                                             >
-                                                                👁️
-                                                            </Link>
+                                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                                                    <circle cx="18" cy="5" r="3"></circle>
+                                                                    <circle cx="6" cy="12" r="3"></circle>
+                                                                    <circle cx="18" cy="19" r="3"></circle>
+                                                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                                                </svg>
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -801,7 +859,7 @@ export default function Show({ company, categories }) {
                                             >
                                                 {/* Miniatura y Título */}
                                                 <div className="flex items-center gap-3 w-full sm:w-auto min-w-0 flex-1">
-                                                    <Link 
+                                                    <a 
                                                         href={route('products.show', prod.id)}
                                                         className="w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/70"
                                                     >
@@ -811,7 +869,7 @@ export default function Show({ company, categories }) {
                                                             className="w-full h-full object-cover"
                                                             onError={(e) => { e.currentTarget.src = fallbackImage; }}
                                                         />
-                                                    </Link>
+                                                    </a>
 
                                                     <div className="min-w-0 flex-1">
                                                         <div className="flex items-center gap-1.5 flex-wrap">
@@ -834,13 +892,13 @@ export default function Show({ company, categories }) {
                                                             </span>
                                                         </div>
 
-                                                        <Link 
+                                                        <a 
                                                             href={route('products.show', prod.id)}
                                                             className="font-bold text-sm text-slate-900 hover:text-blue-600 truncate block mt-0.5"
                                                             title={prod.name}
                                                         >
                                                             {prod.name}
-                                                        </Link>
+                                                        </a>
 
                                                         <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
                                                             {prod.short_description || 'Haz clic para consultar especificaciones técnicas y disponibilidad.'}
@@ -869,13 +927,21 @@ export default function Show({ company, categories }) {
                                                     </div>
 
                                                     <div className="flex items-center gap-1.5">
-                                                        <Link
-                                                            href={route('products.show', prod.id)}
-                                                            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center justify-center"
-                                                            title="Ver ficha técnica"
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSharingProduct(prod)}
+                                                            className="p-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-200/80 hover:border-blue-200 text-xs font-bold transition flex items-center justify-center cursor-pointer"
+                                                            title="Compartir este producto en WhatsApp y redes"
+                                                            aria-label={`Compartir ${prod.name}`}
                                                         >
-                                                            👁️
-                                                        </Link>
+                                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                                                <circle cx="18" cy="5" r="3"></circle>
+                                                                <circle cx="6" cy="12" r="3"></circle>
+                                                                <circle cx="18" cy="19" r="3"></circle>
+                                                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                                            </svg>
+                                                        </button>
 
                                                         <a
                                                             href={getProductQuoteWhatsAppUrl(prod)}
@@ -1350,16 +1416,149 @@ export default function Show({ company, categories }) {
                             </button>
                         </div>
 
+                        {/* Selector de Flyer / Imagen para WhatsApp */}
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                                    Elige qué flyer o imagen compartir
+                                </label>
+                                <span className="text-[10px] text-blue-400 font-bold">
+                                    {selectedBannerKey === 'card' ? 'Plantilla Auto' : selectedBannerKey === 'logo' ? 'Logotipo' : `Flyer Slide ${selectedBannerKey}`}
+                                </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                                {/* Opción Slide 1 */}
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedBannerKey('1')}
+                                    className={`p-1.5 rounded-xl border text-center transition flex flex-col items-center gap-1 cursor-pointer ${
+                                        selectedBannerKey === '1'
+                                            ? 'border-blue-500 bg-blue-500/20 ring-2 ring-blue-500/50 text-white'
+                                            : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-400'
+                                    }`}
+                                >
+                                    <div className="w-full h-11 rounded-lg overflow-hidden bg-slate-900 border border-white/10 flex items-center justify-center">
+                                        {company.banner ? (
+                                            <img src={company.banner} alt="Flyer 1" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-xs">🖼️ 1</span>
+                                        )}
+                                    </div>
+                                    <span className="text-[10px] font-bold truncate max-w-full">Flyer 1</span>
+                                </button>
+
+                                {/* Opción Slide 2 */}
+                                {company.banner_2 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedBannerKey('2')}
+                                        className={`p-1.5 rounded-xl border text-center transition flex flex-col items-center gap-1 cursor-pointer ${
+                                            selectedBannerKey === '2'
+                                                ? 'border-blue-500 bg-blue-500/20 ring-2 ring-blue-500/50 text-white'
+                                                : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-400'
+                                        }`}
+                                    >
+                                        <div className="w-full h-11 rounded-lg overflow-hidden bg-slate-900 border border-white/10 flex items-center justify-center">
+                                            <img src={company.banner_2} alt="Flyer 2" className="w-full h-full object-cover" />
+                                        </div>
+                                        <span className="text-[10px] font-bold truncate max-w-full">Flyer 2</span>
+                                    </button>
+                                )}
+
+                                {/* Opción Slide 3 */}
+                                {company.banner_3 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedBannerKey('3')}
+                                        className={`p-1.5 rounded-xl border text-center transition flex flex-col items-center gap-1 cursor-pointer ${
+                                            selectedBannerKey === '3'
+                                                ? 'border-blue-500 bg-blue-500/20 ring-2 ring-blue-500/50 text-white'
+                                                : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-400'
+                                        }`}
+                                    >
+                                        <div className="w-full h-11 rounded-lg overflow-hidden bg-slate-900 border border-white/10 flex items-center justify-center">
+                                            <img src={company.banner_3} alt="Flyer 3" className="w-full h-full object-cover" />
+                                        </div>
+                                        <span className="text-[10px] font-bold truncate max-w-full">Flyer 3</span>
+                                    </button>
+                                )}
+
+                                {/* Opción Logo */}
+                                {company.logo && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedBannerKey('logo')}
+                                        className={`p-1.5 rounded-xl border text-center transition flex flex-col items-center gap-1 cursor-pointer ${
+                                            selectedBannerKey === 'logo'
+                                                ? 'border-blue-500 bg-blue-500/20 ring-2 ring-blue-500/50 text-white'
+                                                : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-400'
+                                        }`}
+                                    >
+                                        <div className="w-full h-11 rounded-lg overflow-hidden bg-white p-0.5 flex items-center justify-center">
+                                            <img src={company.logo} alt="Logo" className="w-full h-full object-contain" />
+                                        </div>
+                                        <span className="text-[10px] font-bold truncate max-w-full">Logo</span>
+                                    </button>
+                                )}
+
+                                {/* Opción Tarjeta Auto con Productos */}
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedBannerKey('card')}
+                                    className={`p-1.5 rounded-xl border text-center transition flex flex-col items-center gap-1 cursor-pointer ${
+                                        selectedBannerKey === 'card'
+                                            ? 'border-blue-500 bg-blue-500/20 ring-2 ring-blue-500/50 text-white'
+                                            : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-400'
+                                    }`}
+                                >
+                                    <div className="w-full h-11 rounded-lg overflow-hidden bg-slate-900 border border-white/10 flex items-center justify-center text-xs">
+                                        ✨
+                                    </div>
+                                    <span className="text-[10px] font-bold truncate max-w-full">Productos</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Vista previa en tiempo real de la imagen que verá WhatsApp */}
+                        <div className="space-y-1.5 pt-1">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    Vista previa en WhatsApp y Redes
+                                </label>
+                                <a 
+                                    href={route('companies.og-image', { id: company.id, banner: selectedBannerKey })} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-[10px] text-blue-400 hover:text-blue-300 font-bold hover:underline"
+                                >
+                                    Ver imagen HD ↗
+                                </a>
+                            </div>
+                            <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#050914] shadow-inner group relative max-h-48 flex items-center justify-center">
+                                <img 
+                                    key={selectedBannerKey}
+                                    src={route('companies.og-image', { id: company.id, banner: selectedBannerKey })} 
+                                    alt={`Flyer seleccionado de ${company.name}`} 
+                                    className="w-full h-full max-h-48 object-contain transition duration-300 group-hover:scale-[1.01]"
+                                    loading="lazy"
+                                />
+                                <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-[9px] font-black text-slate-300">
+                                    {selectedBannerKey === 'card' ? 'Tarjeta Auto' : selectedBannerKey === 'logo' ? 'Logo' : `Flyer ${selectedBannerKey}`}
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Copiar enlace */}
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
-                                Enlace directo al perfil
+                                Enlace personalizado con este Flyer
                             </label>
                             <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#050914] border border-white/10">
                                 <input 
                                     type="text" 
                                     readOnly 
-                                    value={typeof window !== 'undefined' ? window.location.href : `http://localhost:8000/empresas/${company.id}`} 
+                                    value={getShareUrl(selectedBannerKey)} 
                                     className="bg-transparent border-none text-xs text-slate-300 w-full px-2 focus:outline-hidden truncate"
                                 />
                                 <button
@@ -1379,7 +1578,7 @@ export default function Show({ company, categories }) {
                             </p>
                             <div className="grid grid-cols-2 gap-2.5">
                                 <a
-                                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Mira el perfil y catálogo oficial de ${company.name} en LDR Comercial Bolivia: ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
+                                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Mira el catálogo y promociones de ${company.name} en LDR Comercial Bolivia:\n${getShareUrl(selectedBannerKey)}`)}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition"
@@ -1387,7 +1586,7 @@ export default function Show({ company, categories }) {
                                     <span>WhatsApp ↗</span>
                                 </a>
                                 <a
-                                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
+                                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getShareUrl(selectedBannerKey))}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-bold transition"
@@ -1395,7 +1594,7 @@ export default function Show({ company, categories }) {
                                     <span>Facebook ↗</span>
                                 </a>
                                 <a
-                                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
+                                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getShareUrl(selectedBannerKey))}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-400 border border-sky-500/30 text-xs font-bold transition"
@@ -1403,7 +1602,7 @@ export default function Show({ company, categories }) {
                                     <span>LinkedIn ↗</span>
                                 </a>
                                 <a
-                                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Catálogo oficial de ${company.name} en LDR Comercial Bolivia:`)}&url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
+                                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Catálogo oficial de ${company.name} en LDR Comercial Bolivia:`)}&url=${encodeURIComponent(getShareUrl(selectedBannerKey))}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 text-xs font-bold transition"
@@ -1411,6 +1610,154 @@ export default function Show({ company, categories }) {
                                     <span>X (Twitter) ↗</span>
                                 </a>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ═══════════════════════════════════════════════
+                MODAL: COMPARTIR PRODUCTO CON FOTO Y ENLACE DIRECTO
+               ═══════════════════════════════════════════════ */}
+            {sharingProduct && (
+                <div 
+                    className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4"
+                    onClick={() => setSharingProduct(null)}
+                >
+                    <div 
+                        className="bg-[#0b132b] border border-white/20 text-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Cabecera */}
+                        <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <span className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm shrink-0">
+                                    ↗️
+                                </span>
+                                <div className="min-w-0">
+                                    <h3 className="font-bold text-sm text-white truncate">Compartir Producto</h3>
+                                    <p className="text-[11px] text-slate-400 truncate">{company.name}</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setSharingProduct(null)}
+                                className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center text-sm transition cursor-pointer"
+                                aria-label="Cerrar modal"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Previsualización del Producto (Foto + Datos que cargará WhatsApp) */}
+                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3.5">
+                            <div className="w-16 h-16 rounded-xl bg-white p-1 overflow-hidden shrink-0 flex items-center justify-center shadow-sm">
+                                {sharingProduct.main_image ? (
+                                    <img 
+                                        src={sharingProduct.main_image} 
+                                        alt={sharingProduct.name} 
+                                        className="w-full h-full object-contain"
+                                    />
+                                ) : (
+                                    <span className="text-2xl">📦</span>
+                                )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <h4 className="font-bold text-xs sm:text-sm text-white truncate">
+                                    {sharingProduct.name}
+                                </h4>
+                                <div className="flex items-baseline gap-2 mt-0.5">
+                                    <span className="font-mono font-black text-sm text-emerald-400">
+                                        {sharingProduct.currency || 'Bs.'} {Number(sharingProduct.price).toFixed(2)}
+                                    </span>
+                                    {sharingProduct.wholesale_price && (
+                                        <span className="text-[10px] text-blue-400 font-bold">
+                                            Mayor: {sharingProduct.currency || 'Bs.'} {Number(sharingProduct.wholesale_price).toFixed(2)}
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                    <span>📸</span>
+                                    <span>WhatsApp cargará automáticamente la foto y datos de este producto.</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Enlace Directo al Producto */}
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                                Enlace directo a la ficha del producto
+                            </label>
+                            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#050914] border border-white/10">
+                                <input 
+                                    type="text" 
+                                    readOnly 
+                                    value={getProductShareUrl(sharingProduct)} 
+                                    className="bg-transparent border-none text-xs text-slate-300 w-full px-2 focus:outline-hidden truncate font-mono"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => handleCopyProductUrl(sharingProduct)}
+                                    className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shrink-0 transition cursor-pointer"
+                                >
+                                    {copied ? '✓ Copiado' : 'Copiar'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Botones de Redes Sociales */}
+                        <div className="space-y-2 pt-1">
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                Compartir en redes sociales
+                            </p>
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <a
+                                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                                        `Mira este producto de ${company.name} en LDR Comercial Bolivia:\n\n` +
+                                        `📦 *${sharingProduct.name}*\n` +
+                                        `💰 *Precio:* ${sharingProduct.currency || 'Bs.'} ${Number(sharingProduct.price).toFixed(2)}\n\n` +
+                                        `👉 Ver foto y detalles completos aquí:\n${getProductShareUrl(sharingProduct)}`
+                                    )}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/20"
+                                >
+                                    <span>WhatsApp ↗</span>
+                                </a>
+                                <a
+                                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getProductShareUrl(sharingProduct))}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-bold transition"
+                                >
+                                    <span>Facebook ↗</span>
+                                </a>
+                                <a
+                                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getProductShareUrl(sharingProduct))}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-400 border border-sky-500/30 text-xs font-bold transition"
+                                >
+                                    <span>LinkedIn ↗</span>
+                                </a>
+                                <a
+                                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Mira ${sharingProduct.name} de ${company.name} en LDR Comercial Bolivia:`)}&url=${encodeURIComponent(getProductShareUrl(sharingProduct))}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 text-xs font-bold transition"
+                                >
+                                    <span>X (Twitter) ↗</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        {/* Link para ver ficha técnica directamente */}
+                        <div className="pt-1 text-center">
+                            <a
+                                href={route('products.show', sharingProduct.id)}
+                                className="text-xs text-blue-400 hover:text-blue-300 font-bold hover:underline"
+                            >
+                                Abrir ficha técnica completa de este producto &rarr;
+                            </a>
                         </div>
                     </div>
                 </div>

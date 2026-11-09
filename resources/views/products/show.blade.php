@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="{{ Str::limit(strip_tags($product->short_description ?? $product->description ?? $product->name), 155) }}">
 
+    @php
+        $productImg = $product->main_image 
+            ? (str_starts_with($product->main_image, 'http') ? $product->main_image : asset(ltrim($product->main_image, '/'))) 
+            : asset('favicon.png');
+        $productPrice = ($product->currency ?: 'Bs.') . ' ' . number_format($product->price, 2);
+        $companyName = $product->company->name ?? 'LDR Comercial';
+        $productTitle = "{$product->name} - {$companyName}";
+        $rawDesc = strip_tags($product->short_description ?? $product->description ?? "Precio: {$productPrice}. Disponible en catálogo de {$companyName}.");
+        $productOgDesc = Str::limit($rawDesc, 150);
+    @endphp
+
+    <!-- Open Graph / WhatsApp / Facebook Meta Tags -->
+    <meta property="og:type" content="product">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:site_name" content="LDR Comercial">
+    <meta property="og:title" content="{{ $productTitle }}">
+    <meta property="og:description" content="{{ $productOgDesc }}">
+    <meta property="og:image" content="{{ $productImg }}">
+    <meta property="og:image:secure_url" content="{{ $productImg }}">
+    <meta property="og:image:alt" content="{{ $product->name }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $productTitle }}">
+    <meta name="twitter:description" content="{{ $productOgDesc }}">
+    <meta name="twitter:image" content="{{ $productImg }}">
+
     <title>{{ $product->name }} | {{ $product->company->name ?? 'LDR Comercial' }}</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 

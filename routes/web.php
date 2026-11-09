@@ -2,20 +2,27 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\CompanyAccountController;
+use App\Http\Controllers\Admin\HomeBannerController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\CompanyOgImageController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\SearchSuggestionController;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Event;
+use App\Models\HomeBanner;
 use App\Models\Product;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+// Sugerencias de búsqueda en vivo (Predictive Autocomplete)
+Route::get('/api/search/suggestions', [SearchSuggestionController::class, 'suggestions'])->name('api.search.suggestions');
 
 // Portal Público (Vista nativa de Laravel / Blade)
 Route::get('/', function () {
@@ -31,9 +38,12 @@ Route::get('/', function () {
             return $cat->products->count() > 0;
         });
 
+    $banners = HomeBanner::active()->ordered()->get();
+
     return view('welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
+        'banners' => $banners,
         'categories' => Category::where('is_active', true)->withCount('products')->get(),
         'categoriesWithProducts' => $categoriesWithProducts,
         'promotionalProducts' => Product::with(['company', 'category'])->whereNotNull('original_price')->whereColumn('original_price', '>', 'price')->where('status', 'published')->take(6)->get(),
@@ -44,20 +54,53 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/empresas', function (Request $request) {
-    $query = Company::with('category')->where('is_active', true)->where('is_verified', true);
+    $query = Company::with(['category', 'products' => function($q) {
+        $q->where('status', 'published')->latest()->take(3);
+    }])->where('is_active', true)->where('is_verified', true);
     
     if ($request->filled('category')) {
         $query->where('category_id', $request->category);
     }
     
+    $detectedIntent = null;
+
     if ($request->filled('search')) {
-        $query->where('name', 'like', '%' . $request->search . '%');
+        $search = trim($request->search);
+        $searchMeta = \App\Services\SmartSearchService::parseQuery($search);
+        $cleanTerm = $searchMeta['clean_term'] ?: $search;
+        $expanded = $searchMeta['expanded_terms'];
+        $detectedIntent = $searchMeta['detected_intent_label'] ?? null;
+
+        $query->where(function($q) use ($cleanTerm, $expanded) {
+            $q->where('name', 'like', "%{$cleanTerm}%")
+              ->orWhere('legal_name', 'like', "%{$cleanTerm}%")
+              ->orWhere('city', 'like', "%{$cleanTerm}%")
+              ->orWhere('description', 'like', "%{$cleanTerm}%")
+              ->orWhereHas('category', function($catQ) use ($cleanTerm) {
+                  $catQ->where('name', 'like', "%{$cleanTerm}%");
+              })
+              ->orWhereHas('products', function($prodQ) use ($cleanTerm, $expanded) {
+                  $prodQ->where('status', 'published')
+                        ->where(function($pQ) use ($cleanTerm, $expanded) {
+                            $pQ->where('name', 'like', "%{$cleanTerm}%")
+                               ->orWhere('tags', 'like', "%{$cleanTerm}%")
+                               ->orWhere('short_description', 'like', "%{$cleanTerm}%");
+                            foreach (array_slice($expanded, 0, 4) as $exp) {
+                                if (!empty($exp) && $exp !== $cleanTerm) {
+                                    $pQ->orWhere('name', 'like', "%{$exp}%")
+                                       ->orWhere('tags', 'like', "%{$exp}%");
+                                }
+                            }
+                        });
+              });
+        });
     }
 
     return Inertia::render('Companies/Index', [
         'companies' => $query->paginate(12)->withQueryString(),
         'categories' => Category::where('is_active', true)->get(),
         'filters' => $request->only(['search', 'category']),
+        'detectedIntent' => $detectedIntent,
     ]);
 })->name('companies.index');
 Route::get('/empresas/{id}', function ($id) {
@@ -79,6 +122,9 @@ Route::get('/empresas/{id}', function ($id) {
         'categories' => Category::where('is_active', true)->get(),
     ]);
 })->name('companies.show');
+
+// Tarjeta dinámica de vista previa para WhatsApp y Redes Sociales (OpenGraph)
+Route::get('/empresas/{id}/og-image', [CompanyOgImageController::class, 'show'])->name('companies.og-image');
 
 Route::get('/categorias', function () {
     return Inertia::render('Categories/Index', [
@@ -173,6 +219,49 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return redirect()->route('admin.dashboard');
         }
 
+        // Si es Comprador (buyer), renderiza la vista simplificada de Comprador
+        if ($user->isBuyer()) {
+            $featuredCompanies = Company::with('category')
+                ->where('is_active', true)
+                ->where('is_verified', true)
+                ->latest('updated_at')
+                ->take(6)
+                ->get();
+
+            $featuredProducts = Product::with(['company', 'category'])
+                ->where('status', 'published')
+                ->where('is_featured', true)
+                ->latest()
+                ->take(8)
+                ->get();
+
+            $discountProducts = Product::with(['company', 'category'])
+                ->where('status', 'published')
+                ->whereNotNull('original_price')
+                ->whereColumn('original_price', '>', 'price')
+                ->latest()
+                ->take(6)
+                ->get();
+
+            $categories = Category::where('is_active', true)
+                ->withCount('products')
+                ->orderBy('products_count', 'desc')
+                ->take(8)
+                ->get();
+
+            return Inertia::render('Buyer/Dashboard', [
+                'featuredCompanies' => $featuredCompanies,
+                'featuredProducts' => $featuredProducts,
+                'discountProducts' => $discountProducts,
+                'categories' => $categories,
+                'stats' => [
+                    'followedCompaniesCount' => 0,
+                    'likedProductsCount' => 0,
+                    'quotesCount' => 0,
+                ],
+            ]);
+        }
+
         $company = $user->company()->with('category')->first();
         $companies = $user->companies()->with('category')->get();
 
@@ -233,6 +322,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
         Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+
+        // Gestión del Carrusel de Inicio (Banners Principales)
+        Route::post('/banners', [HomeBannerController::class, 'store'])->name('banners.store');
+        Route::match(['put', 'post'], '/banners/{banner}', [HomeBannerController::class, 'update'])->name('banners.update');
+        Route::delete('/banners/{banner}', [HomeBannerController::class, 'destroy'])->name('banners.destroy');
+        Route::post('/banners/{banner}/toggle-active', [HomeBannerController::class, 'toggleActive'])->name('banners.toggle-active');
     });
 
     // Perfil de Usuario

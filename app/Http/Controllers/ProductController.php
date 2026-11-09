@@ -20,26 +20,43 @@ class ProductController extends Controller
             return Inertia::render('Products/Index', [
                 'hasCompany' => false,
                 'products' => [],
+                'categories' => Category::where('is_active', true)->get(),
             ]);
         }
 
         $query = $company->products()->with('category')->latest();
 
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                  ->orWhere('sku', 'like', "%{$search}%")
+                  ->orWhere('tags', 'like', "%{$search}%");
             });
         }
 
-        $products = $query->paginate(10)->withQueryString();
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'in_stock') {
+                $query->where('in_stock', true);
+            } elseif ($request->status === 'out_of_stock') {
+                $query->where('in_stock', false);
+            } elseif ($request->status === 'featured') {
+                $query->where('is_featured', true);
+            }
+        }
+
+        $products = $query->paginate(12)->withQueryString();
 
         return Inertia::render('Products/Index', [
             'hasCompany' => true,
             'company' => $company,
             'products' => $products,
-            'filters' => $request->only(['search']),
+            'categories' => Category::where('is_active', true)->get(),
+            'filters' => $request->only(['search', 'category', 'status']),
         ]);
     }
 
@@ -71,6 +88,7 @@ class ProductController extends Controller
             'sku' => 'nullable|string|max:100',
             'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
+            'tags' => 'nullable|string|max:1000',
             'price' => 'required|numeric|min:0',
             'original_price' => 'nullable|numeric|min:0',
             'wholesale_price' => 'nullable|numeric|min:0',
@@ -147,6 +165,7 @@ class ProductController extends Controller
             'sku' => 'nullable|string|max:100',
             'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
+            'tags' => 'nullable|string|max:1000',
             'price' => 'required|numeric|min:0',
             'original_price' => 'nullable|numeric|min:0',
             'wholesale_price' => 'nullable|numeric|min:0',

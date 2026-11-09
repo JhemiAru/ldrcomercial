@@ -12,7 +12,7 @@ const VerifiedBadge = ({ size = 'sm' }) => {
     );
 };
 
-export default function CompaniesIndex({ companies, categories, filters }) {
+export default function CompaniesIndex({ companies, categories, filters, detectedIntent }) {
     const [search, setSearch] = useState(filters?.search || '');
     const fallbackImage = 'https://placehold.co/600x400/f8fafc/94a3b8?text=Sin+Imagen';
 
@@ -89,6 +89,12 @@ export default function CompaniesIndex({ companies, categories, filters }) {
 
                 {/* COMPANY GRID */}
                 <div className="flex-1">
+                    {detectedIntent && (
+                        <div className="mb-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200 shadow-xs animate-fade-in">
+                            <span>✨ Búsqueda Inteligente:</span>
+                            <span>{detectedIntent}</span>
+                        </div>
+                    )}
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="font-bold text-xl text-gray-800">
                             Resultados <span className="text-rose-500">({companies.total})</span>
