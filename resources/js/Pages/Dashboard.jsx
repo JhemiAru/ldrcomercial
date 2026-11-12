@@ -216,7 +216,7 @@ export default function Dashboard({ company, companies = [], stats, recentProduc
                         </div>
                         <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full md:w-auto">
                             <a
-                                href={`https://wa.me/59170000000?text=${encodeURIComponent(`Hola equipo comercial de LDR Comercial, mi empresa "${company.name}" está registrada y deseo coordinar la visita presencial de verificación.`)}`}
+                                href={`https://wa.me/59165546995?text=${encodeURIComponent(`Hola equipo comercial de LDR Comercial, mi empresa "${company.name}" está registrada y deseo coordinar la visita presencial de verificación.`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2"

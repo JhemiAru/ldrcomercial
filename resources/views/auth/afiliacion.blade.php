@@ -135,7 +135,7 @@
 
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <a 
-                            href="https://wa.me/59170000000?text={{ urlencode('Hola equipo comercial de LDR Comercial, deseo iniciar el proceso de verificación y afiliación de mi empresa para publicar en la plataforma.') }}" 
+                            href="https://wa.me/59165546995?text={{ urlencode('Hola equipo comercial de LDR Comercial, deseo iniciar el proceso de verificación y afiliación de mi empresa para publicar en la plataforma.') }}" 
                             target="_blank" 
                             rel="noopener noreferrer"
                             class="w-full sm:w-auto px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
