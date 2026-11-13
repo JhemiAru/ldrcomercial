@@ -6,10 +6,36 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 
-export default function CreateProduct({ categories = [], company }) {
+const STANDARD_UNITS = [
+    { value: 'unidad', label: 'Unidad (und)' },
+    { value: 'pieza', label: 'Pieza (pza)' },
+    { value: 'caja', label: 'Caja (cja)' },
+    { value: 'paquete', label: 'Paquete (paq)' },
+    { value: 'bolsa', label: 'Bolsa (bls)' },
+    { value: 'docena', label: 'Docena (doc)' },
+    { value: 'kilogramo', label: 'Kilogramo (kg)' },
+    { value: 'gramo', label: 'Gramo (g)' },
+    { value: 'tonelada', label: 'Tonelada (tn)' },
+    { value: 'litro', label: 'Litro (L)' },
+    { value: 'mililitro', label: 'Mililitro (ml)' },
+    { value: 'galon', label: 'Galón (gal)' },
+    { value: 'metro', label: 'Metro lineal (m)' },
+    { value: 'metro_cuadrado', label: 'Metro cuadrado (m²)' },
+    { value: 'metro_cubico', label: 'Metro cúbico (m³)' },
+    { value: 'rollo', label: 'Rollo (rollo)' },
+    { value: 'par', label: 'Par (par)' },
+    { value: 'set', label: 'Set / Kit' },
+    { value: 'juego', label: 'Juego (jgo)' },
+    { value: 'barril', label: 'Barril' },
+    { value: 'custom', label: '✏️ Otra unidad personalizada...' },
+];
+
+export default function CreateProduct({ categories = [], brands = [], company }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         category_id: categories.length > 0 ? categories[0].id : '',
+        brand_id: '',
+        new_brand_name: '',
         sku: '',
         tags: '',
         short_description: '',
@@ -21,12 +47,18 @@ export default function CreateProduct({ categories = [], company }) {
         currency: 'BOB',
         price_type: 'fixed',
         unit: 'unidad',
+        weight: '',
+        weight_unit: 'kg',
         main_image: null,
         in_stock: true,
         stock_quantity: '',
         is_featured: false,
         status: 'published',
     });
+
+    // Estado para nueva marca y unidad personalizada
+    const [isAddingNewBrand, setIsAddingNewBrand] = useState(false);
+    const [isCustomUnit, setIsCustomUnit] = useState(false);
 
     // Estado para modo de imagen: Archivo vs URL externa
     const [imageInputMode, setImageInputMode] = useState('file');
@@ -166,16 +198,64 @@ export default function CreateProduct({ categories = [], company }) {
                                 <InputError message={errors.category_id} />
                             </div>
 
-                            {/* Código SKU o Modelo */}
+                            {/* Marca Comercial */}
                             <div>
-                                <InputLabel htmlFor="sku" value="Código SKU / Modelo (Opcional)" />
+                                <div className="flex items-center justify-between">
+                                    <InputLabel htmlFor="brand_id" value="Marca Comercial" />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsAddingNewBrand(!isAddingNewBrand);
+                                            if (!isAddingNewBrand) {
+                                                setData('brand_id', '');
+                                            } else {
+                                                setData('new_brand_name', '');
+                                            }
+                                        }}
+                                        className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                                    >
+                                        {isAddingNewBrand ? '← Elegir de la lista' : '+ Nueva marca'}
+                                    </button>
+                                </div>
+                                {!isAddingNewBrand ? (
+                                    <select
+                                        id="brand_id"
+                                        className="mt-1 block w-full rounded-xl border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-slate-800 dark:text-white shadow-xs text-xs sm:text-sm focus:border-blue-500 focus:ring-blue-500"
+                                        value={data.brand_id}
+                                        onChange={(e) => setData('brand_id', e.target.value)}
+                                    >
+                                        <option value="">Sin Marca / Genérico</option>
+                                        {brands.map((b) => (
+                                            <option key={b.id} value={b.id} className="text-slate-800">
+                                                🏷️ {b.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <div className="mt-1">
+                                        <TextInput
+                                            type="text"
+                                            className="w-full text-xs sm:text-sm font-bold"
+                                            value={data.new_brand_name}
+                                            onChange={(e) => setData('new_brand_name', e.target.value)}
+                                            placeholder="Ej. Dahua, Bosch, Truper, Tramontina..."
+                                            autoFocus
+                                        />
+                                    </div>
+                                )}
+                                <InputError message={errors.brand_id || errors.new_brand_name} />
+                            </div>
+
+                            {/* Código SKU o Modelo */}
+                            <div className="md:col-span-2">
+                                <InputLabel htmlFor="sku" value="Código SKU / Modelo / Número de Parte (Opcional)" />
                                 <TextInput
                                     id="sku"
                                     type="text"
                                     className="mt-1 block w-full text-xs sm:text-sm font-mono"
                                     value={data.sku}
                                     onChange={(e) => setData('sku', e.target.value)}
-                                    placeholder="Ej. TPI-850-BOSCH"
+                                    placeholder="Ej. HAC-HFW1200T-A (Dahua) o TPI-850"
                                 />
                                 <InputError message={errors.sku} />
                             </div>
@@ -367,18 +447,68 @@ export default function CreateProduct({ categories = [], company }) {
                                 <InputError message={errors.original_price} />
                             </div>
 
-                            {/* Unidad de Medida */}
+                            {/* Unidad de Medida Estándar */}
                             <div>
-                                <InputLabel htmlFor="unit" value="Unidad de Medida" />
-                                <TextInput
+                                <InputLabel htmlFor="unit" value="Unidad de Medida *" />
+                                <select
                                     id="unit"
-                                    type="text"
-                                    className="mt-1 block w-full text-xs sm:text-sm"
-                                    value={data.unit}
-                                    onChange={(e) => setData('unit', e.target.value)}
-                                    placeholder="unidad, metro, caja, kg, bolsa"
-                                />
+                                    className="mt-1 block w-full rounded-xl border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-slate-800 dark:text-white shadow-xs text-xs sm:text-sm focus:border-blue-500 focus:ring-blue-500 font-medium"
+                                    value={isCustomUnit ? 'custom' : data.unit}
+                                    onChange={(e) => {
+                                        if (e.target.value === 'custom') {
+                                            setIsCustomUnit(true);
+                                        } else {
+                                            setIsCustomUnit(false);
+                                            setData('unit', e.target.value);
+                                        }
+                                    }}
+                                >
+                                    {STANDARD_UNITS.map((u) => (
+                                        <option key={u.value} value={u.value} className="text-slate-800">
+                                            {u.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                {isCustomUnit && (
+                                    <TextInput
+                                        type="text"
+                                        className="mt-2 block w-full text-xs sm:text-sm"
+                                        value={data.unit === 'custom' ? '' : data.unit}
+                                        onChange={(e) => setData('unit', e.target.value)}
+                                        placeholder="Escribe la unidad (ej. frasco, pliego, tira)"
+                                        required
+                                        autoFocus
+                                    />
+                                )}
                                 <InputError message={errors.unit} />
+                            </div>
+
+                            {/* Peso del Producto (Opcional) */}
+                            <div>
+                                <InputLabel htmlFor="weight" value="Peso del Producto (Opcional)" />
+                                <div className="mt-1 flex rounded-xl shadow-xs">
+                                    <TextInput
+                                        id="weight"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        className="rounded-r-none block w-full text-xs sm:text-sm"
+                                        value={data.weight}
+                                        onChange={(e) => setData('weight', e.target.value)}
+                                        placeholder="0.00"
+                                    />
+                                    <select
+                                        value={data.weight_unit}
+                                        onChange={(e) => setData('weight_unit', e.target.value)}
+                                        className="rounded-r-xl border-l-0 border-slate-300 dark:border-white/10 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-xs font-bold px-3 focus:ring-0 focus:border-slate-300 cursor-pointer"
+                                    >
+                                        <option value="kg">kg</option>
+                                        <option value="g">g</option>
+                                        <option value="lb">lb</option>
+                                        <option value="ton">ton</option>
+                                    </select>
+                                </div>
+                                <InputError message={errors.weight} />
                             </div>
 
                             {/* Precio Mayorista */}

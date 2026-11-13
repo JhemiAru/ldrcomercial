@@ -354,6 +354,11 @@ export default function Header({
                                                                     {p.name}
                                                                 </h4>
                                                                 <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                                                    {p.brand_name && (
+                                                                        <span className="font-bold text-blue-600 dark:text-blue-400">
+                                                                            🏷️ {p.brand_name}
+                                                                        </span>
+                                                                    )}
                                                                     {p.company_name && <span className="truncate">{p.company_name}</span>}
                                                                     {p.category_name && <span>• {p.category_name}</span>}
                                                                 </div>
@@ -364,6 +369,28 @@ export default function Header({
                                                                 </span>
                                                             </div>
                                                         </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Marcas Comerciales */}
+                                        {suggestions.brands?.length > 0 && (
+                                            <div className="p-2 border-t border-slate-100 dark:border-white/5">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 block mb-1">
+                                                    Marcas Comerciales
+                                                </span>
+                                                <div className="flex flex-wrap gap-1.5 px-2 py-1">
+                                                    {suggestions.brands.map((b) => (
+                                                        <Link
+                                                            key={b.id}
+                                                            href={b.url}
+                                                            onClick={() => setShowSuggestions(false)}
+                                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-white/5 hover:bg-blue-100 dark:hover:bg-white/10 text-xs font-bold text-blue-700 dark:text-blue-300 transition"
+                                                        >
+                                                            <span>🏷️ {b.name}</span>
+                                                            <span className="text-[10px] text-slate-400 font-normal">({b.products_count})</span>
+                                                        </Link>
                                                     ))}
                                                 </div>
                                             </div>

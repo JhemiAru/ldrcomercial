@@ -242,8 +242,32 @@
                             </div>
                         @endif
 
-                        <!-- Título del Producto -->
+                        <!-- Título y Badges del Producto -->
                         <div>
+                            <div class="flex items-center flex-wrap gap-2 mb-2.5">
+                                @if($product->brand)
+                                    <a 
+                                        href="{{ route('companies.index', ['search' => $product->brand->name]) }}"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-blue-700 dark:text-blue-300 text-xs font-black uppercase tracking-wider hover:bg-blue-100 dark:hover:bg-blue-500/20 transition shadow-2xs"
+                                        title="Ver todos los productos y proveedores de {{ $product->brand->name }}"
+                                    >
+                                        <span>🏷️</span>
+                                        <span>{{ $product->brand->name }}</span>
+                                    </a>
+                                @endif
+                                @if($product->weight)
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 text-xs font-bold">
+                                        <span>⚖️</span>
+                                        <span>{{ $product->weight }} {{ $product->weight_unit ?? 'kg' }}</span>
+                                    </span>
+                                @endif
+                                @if($product->sku)
+                                    <span class="text-xs font-mono text-slate-400 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded">
+                                        SKU: {{ $product->sku }}
+                                    </span>
+                                @endif
+                            </div>
+
                             <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-snug">
                                 {{ $product->name }}
                             </h1>

@@ -207,7 +207,9 @@ export default function Show({ company, categories }) {
                 const matchDesc = (p.short_description || '').toLowerCase().includes(term);
                 const matchSku = (p.sku || '').toLowerCase().includes(term);
                 const matchCat = (p.category?.name || '').toLowerCase().includes(term);
-                return matchName || matchDesc || matchSku || matchCat;
+                const matchBrand = (p.brand?.name || '').toLowerCase().includes(term);
+                const matchTags = (p.tags || '').toLowerCase().includes(term);
+                return matchName || matchDesc || matchSku || matchCat || matchBrand || matchTags;
             });
         }
 
@@ -777,11 +779,23 @@ export default function Show({ company, categories }) {
                                                 {/* Información Compacta */}
                                                 <div className="p-3 sm:p-3.5 flex flex-col flex-1 justify-between">
                                                     <div>
-                                                        {prod.sku && (
-                                                            <span className="font-mono text-[9px] text-slate-400 font-semibold block mb-0.5">
-                                                                SKU: {prod.sku}
-                                                            </span>
-                                                        )}
+                                                        <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                                            {prod.brand && (
+                                                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                                                                    🏷️ {prod.brand.name}
+                                                                </span>
+                                                            )}
+                                                            {prod.weight && (
+                                                                <span className="text-[9px] text-slate-500 font-semibold">
+                                                                    ⚖️ {prod.weight} {prod.weight_unit || 'kg'}
+                                                                </span>
+                                                            )}
+                                                            {prod.sku && (
+                                                                <span className="font-mono text-[9px] text-slate-400 font-semibold">
+                                                                    SKU: {prod.sku}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         <a 
                                                             href={route('products.show', prod.id)}
                                                             className="font-bold text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug min-h-[2.2rem] block"
@@ -882,6 +896,16 @@ export default function Show({ company, categories }) {
                                                             {prod.category && (
                                                                 <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
                                                                     {prod.category.name}
+                                                                </span>
+                                                            )}
+                                                            {prod.brand && (
+                                                                <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                                                                    🏷️ {prod.brand.name}
+                                                                </span>
+                                                            )}
+                                                            {prod.weight && (
+                                                                <span className="text-[10px] font-semibold text-slate-500">
+                                                                    ⚖️ {prod.weight} {prod.weight_unit || 'kg'}
                                                                 </span>
                                                             )}
                                                             <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${

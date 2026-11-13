@@ -540,6 +540,26 @@
                     html += `</div></div>`;
                 }
 
+                // Marcas comerciales coincidentes
+                if (data.brands && data.brands.length > 0) {
+                    html += `
+                        <div class="p-2 border-t border-slate-100 dark:border-white/5">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 block mb-1">
+                                Marcas Oficiales
+                            </span>
+                            <div class="flex flex-wrap gap-1.5 px-2 py-1">
+                    `;
+                    data.brands.forEach(b => {
+                        html += `
+                            <a href="${b.url}" class="suggestion-item inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-white/5 hover:bg-blue-100 dark:hover:bg-white/10 text-xs font-bold text-blue-700 dark:text-blue-300 transition">
+                                <span>🏷️ ${escapeHtml(b.name)}</span>
+                                <span class="text-[10px] text-slate-400 font-normal">(${b.products_count})</span>
+                            </a>
+                        `;
+                    });
+                    html += `</div></div>`;
+                }
+
                 // Enlace inferior para ver todos los resultados
                 html += `
                     <a href="/empresas?search=${encodeURIComponent(term)}" class="block p-2.5 text-center bg-slate-50 dark:bg-white/[0.03] hover:bg-blue-50 dark:hover:bg-white/10 text-xs font-black text-blue-600 dark:text-blue-400 transition">

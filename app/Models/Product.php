@@ -13,6 +13,7 @@ class Product extends Model
     protected $fillable = [
         'company_id',
         'category_id',
+        'brand_id',
         'name',
         'slug',
         'sku',
@@ -26,6 +27,8 @@ class Product extends Model
         'currency',
         'price_type',
         'unit',
+        'weight',
+        'weight_unit',
         'main_image',
         'images',
         'in_stock',
@@ -39,10 +42,16 @@ class Product extends Model
         'original_price' => 'decimal:2',
         'wholesale_price' => 'decimal:2',
         'min_wholesale_qty' => 'integer',
+        'weight' => 'decimal:2',
         'images' => 'array',
         'in_stock' => 'boolean',
         'is_featured' => 'boolean',
     ];
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
 
     public function company(): BelongsTo
     {

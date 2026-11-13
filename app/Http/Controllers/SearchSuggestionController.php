@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Product;
@@ -32,7 +33,7 @@ class SearchSuggestionController extends Controller
         }
 
         // 1. Productos usando SmartSearchService (inteligencia semántica + tags + intención)
-        $productQuery = Product::with(['company', 'category'])->where('status', 'published');
+        $productQuery = Product::with(['company', 'category', 'brand'])->where('status', 'published');
         $searchMeta = SmartSearchService::applyProductSearch($productQuery, $term);
         
         $products = $productQuery->take(6)->get()->map(function ($p) {
@@ -45,6 +46,7 @@ class SearchSuggestionController extends Controller
                 'image' => $p->main_image ?: null,
                 'company_name' => $p->company ? $p->company->name : null,
                 'category_name' => $p->category ? $p->category->name : null,
+                'brand_name' => $p->brand ? $p->brand->name : null,
                 'url' => route('products.show', $p->id),
             ];
         });
@@ -96,7 +98,28 @@ class SearchSuggestionController extends Controller
                 ];
             });
 
-        $totalCount = $products->count() + $companies->count() + $categories->count();
+        // 4. Marcas comerciales coincidentes
+        $brands = Brand::where('is_active', true)
+            ->where(function ($query) use ($term, $cleanTerm) {
+                $query->where('name', 'like', "%{$term}%")
+                      ->orWhere('name', 'like', "%{$cleanTerm}%");
+            })
+            ->withCount(['products' => function ($q) {
+                $q->where('status', 'published');
+            }])
+            ->take(3)
+            ->get()
+            ->map(function ($b) {
+                return [
+                    'id' => $b->id,
+                    'name' => $b->name,
+                    'logo' => $b->logo ?: null,
+                    'products_count' => $b->products_count,
+                    'url' => route('companies.index', ['search' => $b->name]),
+                ];
+            });
+
+        $totalCount = $products->count() + $companies->count() + $categories->count() + $brands->count();
 
         return response()->json([
             'query' => $term,
@@ -105,6 +128,7 @@ class SearchSuggestionController extends Controller
             'products' => $products,
             'companies' => $companies,
             'categories' => $categories,
+            'brands' => $brands,
             'total' => $totalCount,
         ]);
     }

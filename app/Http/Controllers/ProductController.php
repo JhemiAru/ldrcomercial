@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -24,14 +25,17 @@ class ProductController extends Controller
             ]);
         }
 
-        $query = $company->products()->with('category')->latest();
+        $query = $company->products()->with(['category', 'brand'])->latest();
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('sku', 'like', "%{$search}%")
-                  ->orWhere('tags', 'like', "%{$search}%");
+                  ->orWhere('tags', 'like', "%{$search}%")
+                  ->orWhereHas('brand', function($bq) use ($search) {
+                      $bq->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -70,6 +74,7 @@ class ProductController extends Controller
 
         return Inertia::render('Products/Create', [
             'categories' => Category::all(),
+            'brands' => Brand::where('is_active', true)->orderBy('name')->get(),
             'company' => $company,
         ]);
     }
@@ -85,6 +90,8 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'new_brand_name' => 'nullable|string|max:100',
             'sku' => 'nullable|string|max:100',
             'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
@@ -96,6 +103,8 @@ class ProductController extends Controller
             'currency' => 'nullable|string|max:10',
             'price_type' => 'nullable|string|max:50',
             'unit' => 'nullable|string|max:50',
+            'weight' => 'nullable|numeric|min:0',
+            'weight_unit' => 'nullable|string|max:20',
             'stock_quantity' => 'nullable|integer|min:0',
             'in_stock' => 'boolean',
             'status' => 'nullable|in:published,draft,archived',
@@ -109,9 +118,19 @@ class ProductController extends Controller
             'price.numeric' => 'El precio debe ser un número válido.',
         ]);
 
+        if ($request->filled('new_brand_name')) {
+            $brand = Brand::firstOrCreate(
+                ['name' => trim($request->new_brand_name)],
+                ['slug' => Str::slug($request->new_brand_name), 'is_active' => true]
+            );
+            $validated['brand_id'] = $brand->id;
+        }
+        unset($validated['new_brand_name']);
+
         $validated['status'] = $validated['status'] ?? 'published';
         $validated['currency'] = $validated['currency'] ?? 'BOB';
         $validated['unit'] = $validated['unit'] ?? 'unidad';
+        $validated['weight_unit'] = $validated['weight_unit'] ?? 'kg';
         $validated['price_type'] = $validated['price_type'] ?? 'fixed';
         $validated['min_wholesale_qty'] = $validated['min_wholesale_qty'] ?? 1;
 
@@ -146,8 +165,9 @@ class ProductController extends Controller
         }
 
         return Inertia::render('Products/Edit', [
-            'product' => $product,
+            'product' => $product->load('brand'),
             'categories' => Category::all(),
+            'brands' => Brand::where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -162,6 +182,8 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'new_brand_name' => 'nullable|string|max:100',
             'sku' => 'nullable|string|max:100',
             'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
@@ -173,6 +195,8 @@ class ProductController extends Controller
             'currency' => 'nullable|string|max:10',
             'price_type' => 'nullable|string|max:50',
             'unit' => 'nullable|string|max:50',
+            'weight' => 'nullable|numeric|min:0',
+            'weight_unit' => 'nullable|string|max:20',
             'stock_quantity' => 'nullable|integer|min:0',
             'in_stock' => 'boolean',
             'status' => 'nullable|in:published,draft,archived',
@@ -186,9 +210,21 @@ class ProductController extends Controller
             'price.numeric' => 'El precio debe ser un número válido.',
         ]);
 
+        if ($request->filled('new_brand_name')) {
+            $brand = Brand::firstOrCreate(
+                ['name' => trim($request->new_brand_name)],
+                ['slug' => Str::slug($request->new_brand_name), 'is_active' => true]
+            );
+            $validated['brand_id'] = $brand->id;
+        }
+        unset($validated['new_brand_name']);
+
         $validated['status'] = $validated['status'] ?? ($product->status ?: 'published');
         $validated['currency'] = $validated['currency'] ?? ($product->currency ?: 'BOB');
         $validated['unit'] = $validated['unit'] ?? ($product->unit ?: 'unidad');
+        $validated['weight_unit'] = $validated['weight_unit'] ?? ($product->weight_unit ?: 'kg');
+        $validated['price_type'] = $validated['price_type'] ?? ($product->price_type ?: 'fixed');
+        $validated['min_wholesale_qty'] = $validated['min_wholesale_qty'] ?? ($product->min_wholesale_qty ?: 1);
         $validated['price_type'] = $validated['price_type'] ?? ($product->price_type ?: 'fixed');
         $validated['min_wholesale_qty'] = $validated['min_wholesale_qty'] ?? ($product->min_wholesale_qty ?: 1);
 

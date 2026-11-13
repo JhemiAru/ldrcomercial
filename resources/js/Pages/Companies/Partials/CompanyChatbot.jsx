@@ -311,7 +311,8 @@ export default function CompanyChatbot({ company }) {
             const descMatch = (p.short_description || '').toLowerCase().includes(text);
             const tagMatch = (p.tags || '').toLowerCase().includes(text);
             const catMatch = (p.category?.name || '').toLowerCase().includes(text);
-            return nameMatch || descMatch || tagMatch || catMatch;
+            const brandMatch = (p.brand?.name || '').toLowerCase().includes(text);
+            return nameMatch || descMatch || tagMatch || catMatch || brandMatch;
         });
 
         if (matchedProducts.length > 0) {

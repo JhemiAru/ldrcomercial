@@ -84,7 +84,10 @@ Route::get('/empresas', function (Request $request) {
                         ->where(function($pQ) use ($cleanTerm, $expanded) {
                             $pQ->where('name', 'like', "%{$cleanTerm}%")
                                ->orWhere('tags', 'like', "%{$cleanTerm}%")
-                               ->orWhere('short_description', 'like', "%{$cleanTerm}%");
+                               ->orWhere('short_description', 'like', "%{$cleanTerm}%")
+                               ->orWhereHas('brand', function($bQ) use ($cleanTerm) {
+                                   $bQ->where('name', 'like', "%{$cleanTerm}%");
+                               });
                             foreach (array_slice($expanded, 0, 4) as $exp) {
                                 if (!empty($exp) && $exp !== $cleanTerm) {
                                     $pQ->orWhere('name', 'like', "%{$exp}%")
@@ -105,7 +108,7 @@ Route::get('/empresas', function (Request $request) {
 })->name('companies.index');
 Route::get('/empresas/{id}', function ($id) {
     $company = Company::with(['category', 'products' => function($q) {
-        $q->where('status', 'published')->with('category')->latest();
+        $q->where('status', 'published')->with(['category', 'brand'])->latest();
     }, 'events' => function($q) {
         $q->where('status', 'active')->latest()->take(10);
     }])->findOrFail($id);
@@ -171,7 +174,7 @@ Route::get('/productos/{id}', function ($id) {
         return redirect()->route('products.create');
     }
 
-    $product = Product::with(['company.category', 'category'])
+    $product = Product::with(['company.category', 'category', 'brand'])
         ->where('status', 'published')
         ->where(function($q) use ($id) {
             $q->where('id', $id)->orWhere('slug', $id);
@@ -179,7 +182,7 @@ Route::get('/productos/{id}', function ($id) {
         ->firstOrFail();
 
     // Productos relacionados de la misma categoría
-    $relatedProducts = Product::with(['company', 'category'])
+    $relatedProducts = Product::with(['company', 'category', 'brand'])
         ->where('category_id', $product->category_id)
         ->where('id', '!=', $product->id)
         ->where('status', 'published')
@@ -188,7 +191,7 @@ Route::get('/productos/{id}', function ($id) {
         ->get();
 
     // Más productos del mismo proveedor
-    $companyProducts = Product::with(['company', 'category'])
+    $companyProducts = Product::with(['company', 'category', 'brand'])
         ->where('company_id', $product->company_id)
         ->where('id', '!=', $product->id)
         ->where('status', 'published')

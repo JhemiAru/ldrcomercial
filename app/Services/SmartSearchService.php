@@ -23,6 +23,9 @@ class SmartSearchService
         'ropa' => ['moda', 'prenda', 'camisa', 'pantalon', 'polera', 'vestido', 'calzado', 'textil'],
         'medicamento' => ['salud', 'farmacia', 'medico', 'médico', 'jarabe', 'pastilla', 'capsula'],
         'alimento' => ['comida', 'bebida', 'snack', 'abarrote', 'grano', 'harina', 'aceite', 'comestible'],
+        'seguridad' => ['camara', 'cámara', 'cctv', 'dvr', 'nvr', 'alarma', 'dahua', 'hikvision', 'vigilancia', 'sensor'],
+        'dahua' => ['camara', 'cámara', 'seguridad', 'cctv', 'dvr', 'nvr', 'videovigilancia', 'hikvision'],
+        'hikvision' => ['camara', 'cámara', 'seguridad', 'cctv', 'dvr', 'nvr', 'videovigilancia', 'dahua'],
     ];
 
     /**
@@ -160,6 +163,9 @@ class SmartSearchService
                          ->orWhere('description', 'like', "%{$cleanTerm}%")
                          ->orWhereHas('category', function ($catQuery) use ($cleanTerm) {
                              $catQuery->where('name', 'like', "%{$cleanTerm}%");
+                         })
+                         ->orWhereHas('brand', function ($brandQuery) use ($cleanTerm) {
+                             $brandQuery->where('name', 'like', "%{$cleanTerm}%");
                          })
                          ->orWhereHas('company', function ($compQuery) use ($cleanTerm) {
                              $compQuery->where('name', 'like', "%{$cleanTerm}%");
