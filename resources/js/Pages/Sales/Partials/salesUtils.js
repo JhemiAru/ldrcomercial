@@ -206,3 +206,18 @@ export const generateWhatsAppShareUrl = (doc, company) => {
     return phone ? `https://wa.me/591${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
 };
 
+/**
+ * Genera el enlace de WhatsApp con mensaje introductorio para acompañar la imagen de la cotización
+ */
+export const generateWhatsAppImageShareUrl = (doc, company) => {
+    const phone = (doc.client_phone || '').replace(/[^0-9]/g, '');
+    const isQuotation = doc.doc_type === 'quotation';
+    const typeTitle = isQuotation ? 'COTIZACIÓN' : 'NOTA DE VENTA';
+
+    let message = `Hola *${doc.client_name}*, te adjunto la imagen oficial de tu *${typeTitle} #${doc.id}* emitida por *${company?.name || 'LDR Comercial'}*.\n\n`;
+    message += `Quedo atento a tus dudas o confirmación para coordinar la entrega o despacho.`;
+
+    const encoded = encodeURIComponent(message);
+    return phone ? `https://wa.me/591${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
+};
+

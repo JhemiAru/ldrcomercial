@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import {
     formatMoneyBs,
     numberToBolivianosWords,
     calculateDocumentTotals,
     getStatusBadge,
     generateWhatsAppShareUrl,
+    generateWhatsAppImageShareUrl,
 } from './salesUtils';
 
 export default function DocumentPreviewModal({
@@ -20,10 +22,108 @@ export default function DocumentPreviewModal({
     const [withTax, setWithTax] = useState(false); // 13% IVA Bolivia
     const [templateTheme, setTemplateTheme] = useState('modern'); // 'modern' | 'classic' | 'receipt'
     const [copiedNotification, setCopiedNotification] = useState(false);
+    const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+    const [actionNotice, setActionNotice] = useState(null);
 
     const totals = calculateDocumentTotals(doc.items, withTax);
     const badge = getStatusBadge(doc.status, doc.doc_type);
     const isQuotation = doc.doc_type === 'quotation';
+
+    // Generador de Canvas de la Cotización con html2canvas
+    const generateImageCanvas = async () => {
+        const element = document.getElementById('printable-document-sheet');
+        if (!element) return null;
+
+        return await html2canvas(element, {
+            scale: 2, // 2x Alta Resolución HD
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+        });
+    };
+
+    // Descargar Cotización como Imagen PNG
+    const handleDownloadImage = async () => {
+        try {
+            setIsGeneratingImage(true);
+            setActionNotice('⏳ Generando imagen en alta resolución...');
+            const canvas = await generateImageCanvas();
+            if (!canvas) throw new Error('No se pudo renderizar la cotización');
+
+            const fileName = `${isQuotation ? 'Cotizacion' : 'NotaVenta'}-${doc.id}.png`;
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = canvas.toDataURL('image/png', 0.95);
+            link.click();
+
+            setActionNotice('✅ ¡Imagen descargada con éxito! Lista para adjuntar o compartir.');
+            setTimeout(() => setActionNotice(null), 4000);
+        } catch (err) {
+            console.error(err);
+            setActionNotice('❌ No se pudo generar la imagen. Intenta imprimir en PDF.');
+            setTimeout(() => setActionNotice(null), 4000);
+        } finally {
+            setIsGeneratingImage(false);
+        }
+    };
+
+    // Compartir Imagen Directamente por WhatsApp
+    const handleShareImageWhatsApp = async () => {
+        try {
+            setIsGeneratingImage(true);
+            setActionNotice('⏳ Preparando imagen de cotización...');
+            const canvas = await generateImageCanvas();
+            if (!canvas) throw new Error('No se pudo renderizar');
+
+            const fileName = `${isQuotation ? 'Cotizacion' : 'NotaVenta'}-${doc.id}.png`;
+
+            // Si el dispositivo/navegador soporta compartir archivos nativamente (celulares Android/iOS)
+            if (navigator.share && navigator.canShare) {
+                canvas.toBlob(async (blob) => {
+                    try {
+                        const file = new File([blob], fileName, { type: 'image/png' });
+                        if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                files: [file],
+                                title: `${isQuotation ? 'Cotización Formal' : 'Nota de Venta'} #${doc.id}`,
+                                text: `Hola ${doc.client_name}, te adjunto la imagen oficial de tu ${isQuotation ? 'cotización' : 'nota de venta'} #${doc.id} de ${companyName}.`,
+                            });
+                            setActionNotice('✅ Cotización enviada a WhatsApp.');
+                            setTimeout(() => setActionNotice(null), 3000);
+                            return;
+                        }
+                    } catch (shareErr) {
+                        // Usuario canceló o no se completó
+                    }
+                    fallbackDownloadAndOpenWhatsApp(canvas, fileName);
+                }, 'image/png', 0.95);
+            } else {
+                fallbackDownloadAndOpenWhatsApp(canvas, fileName);
+            }
+        } catch (err) {
+            console.error(err);
+            setActionNotice('❌ Error al preparar la imagen.');
+            setTimeout(() => setActionNotice(null), 3500);
+        } finally {
+            setIsGeneratingImage(false);
+        }
+    };
+
+    const fallbackDownloadAndOpenWhatsApp = (canvas, fileName) => {
+        // 1. Descargar la imagen automáticamente en el equipo
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = canvas.toDataURL('image/png', 0.95);
+        link.click();
+
+        // 2. Abrir WhatsApp del cliente con el texto introductorio
+        const whatsappUrl = generateWhatsAppImageShareUrl(doc, company);
+        window.open(whatsappUrl, '_blank');
+
+        setActionNotice('📥 Imagen descargada y WhatsApp abierto. Solo arrastra o adjunta la imagen al chat.');
+        setTimeout(() => setActionNotice(null), 6000);
+    };
 
     // Manejador de Impresión
     const handlePrint = () => {
@@ -38,7 +138,7 @@ export default function DocumentPreviewModal({
         setTimeout(() => setCopiedNotification(false), 2500);
     };
 
-    // Compartir por WhatsApp
+    // Compartir por WhatsApp (Texto)
     const handleWhatsAppShare = () => {
         const url = generateWhatsAppShareUrl({ ...doc, with_tax: withTax }, company);
         window.open(url, '_blank');
@@ -124,7 +224,7 @@ export default function DocumentPreviewModal({
                         <button
                             type="button"
                             onClick={() => setWithTax(!withTax)}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition ${
+                            className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition ${
                                 withTax
                                     ? 'bg-blue-500 text-white border-blue-600 shadow-sm'
                                     : 'bg-white dark:bg-white/5 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10 hover:bg-slate-100'
@@ -134,21 +234,46 @@ export default function DocumentPreviewModal({
                             {withTax ? '✓ Con Factura (IVA 13%)' : '+ Aplicar IVA (13%)'}
                         </button>
 
-                        {/* Botón WhatsApp */}
+                        {/* Botón Descargar Imagen */}
+                        <button
+                            type="button"
+                            onClick={handleDownloadImage}
+                            disabled={isGeneratingImage}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer"
+                            title="Descargar imagen PNG de alta resolución lista para enviar"
+                        >
+                            <span>🖼️</span>
+                            <span>{isGeneratingImage ? 'Generando...' : 'Descargar Imagen'}</span>
+                        </button>
+
+                        {/* Botón WhatsApp Imagen */}
+                        <button
+                            type="button"
+                            onClick={handleShareImageWhatsApp}
+                            disabled={isGeneratingImage}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer"
+                            title="Descargar imagen y abrir WhatsApp del cliente"
+                        >
+                            <span>📲</span>
+                            <span>Enviar Imagen WhatsApp</span>
+                        </button>
+
+                        {/* Botón WhatsApp Texto */}
                         <button
                             type="button"
                             onClick={handleWhatsAppShare}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-white/10 transition cursor-pointer"
+                            title="Enviar resumen en texto por WhatsApp"
                         >
                             <span>💬</span>
-                            <span>WhatsApp</span>
+                            <span>Texto</span>
                         </button>
 
                         {/* Botón Imprimir / PDF */}
                         <button
                             type="button"
                             onClick={handlePrint}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold rounded-lg shadow-sm transition"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold rounded-xl shadow-sm transition cursor-pointer"
                         >
                             <span>🖨️</span>
                             <span>Imprimir / PDF</span>
@@ -159,10 +284,10 @@ export default function DocumentPreviewModal({
                             <button
                                 type="button"
                                 onClick={handleConvert}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg shadow-sm transition"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer"
                             >
                                 <span>⚡</span>
-                                <span>Convertir a Venta</span>
+                                <span>A Venta</span>
                             </button>
                         )}
 
@@ -170,13 +295,30 @@ export default function DocumentPreviewModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-white flex items-center justify-center font-bold text-sm transition"
+                            className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-white flex items-center justify-center font-bold text-sm transition cursor-pointer"
                             aria-label="Cerrar modal"
                         >
                             ✕
                         </button>
                     </div>
                 </div>
+
+                {/* Banner de Aviso / Notificación Interactiva */}
+                {actionNotice && (
+                    <div className="no-print bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2.5 text-xs font-bold flex items-center justify-between shadow-inner animate-in fade-in">
+                        <div className="flex items-center gap-2">
+                            <span>✨</span>
+                            <span>{actionNotice}</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setActionNotice(null)}
+                            className="text-white hover:text-blue-200 font-bold ml-2 cursor-pointer"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
 
                 {/* ═══════════════════════════════════════════════
                     CUERPO DEL DOCUMENTO (HOJA MEMBRETADA A4 / CARTA)
