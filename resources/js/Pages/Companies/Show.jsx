@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import Header from '../Welcome/Partials/Header';
 import { fallbackImage } from '../Welcome/Partials/WelcomeUtils';
+import CompanyChatbot from './Partials/CompanyChatbot';
 
 const VerifiedBadge = ({ size = 'sm' }) => {
     const dims = size === 'xs' ? 'w-3 h-3' : size === 'sm' ? 'w-4 h-4' : size === 'md' ? 'w-5 h-5' : 'w-6 h-6';
@@ -1866,6 +1867,11 @@ export default function Show({ company, categories }) {
                     <span className="text-xs sm:text-sm font-semibold">{toastMessage}</span>
                 </div>
             )}
+
+            {/* ═══════════════════════════════════════════════
+                CHATBOT HÍBRIDO DE PREGUNTAS FRECUENTES Y PRODUCTOS
+               ═══════════════════════════════════════════════ */}
+            <CompanyChatbot company={company} />
 
         </div>
     );
