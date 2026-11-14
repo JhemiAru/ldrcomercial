@@ -33,11 +33,18 @@ export default function EditCompany({ company, categories = [], status }) {
         remove_banner: false,
         remove_banner_2: false,
         remove_banner_3: false,
+        qr_payment: null,
+        remove_qr_payment: false,
+        bank_account_info: company?.bank_account_info || '',
     });
 
     // Estados para previsualizaciones de imágenes
     const [logoPreview, setLogoPreview] = useState(company?.logo || null);
     const [logoUseUrl, setLogoUseUrl] = useState(false);
+
+    const [qrPreview, setQrPreview] = useState(company?.qr_payment || null);
+    const [qrInputMode, setQrInputMode] = useState('file');
+    const qrFileRef = useRef(null);
 
     const [bannerPreviews, setBannerPreviews] = useState({
         banner: company?.banner || null,
@@ -135,6 +142,37 @@ export default function EditCompany({ company, categories = [], status }) {
         if (bannerRefs[field]?.current) {
             bannerRefs[field].current.value = '';
         }
+    };
+
+    const handleQrFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setData((prev) => ({
+                ...prev,
+                qr_payment: file,
+                remove_qr_payment: false,
+            }));
+            setQrPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleQrUrlChange = (val) => {
+        setData((prev) => ({
+            ...prev,
+            qr_payment: val,
+            remove_qr_payment: false,
+        }));
+        setQrPreview(val || null);
+    };
+
+    const handleRemoveQr = () => {
+        setData((prev) => ({
+            ...prev,
+            qr_payment: null,
+            remove_qr_payment: true,
+        }));
+        setQrPreview(null);
+        if (qrFileRef.current) qrFileRef.current.value = '';
     };
 
     const submit = (e) => {
@@ -706,6 +744,135 @@ export default function EditCompany({ company, categories = [], status }) {
                                     placeholder="Ej. 1028473021"
                                 />
                                 <InputError message={errors.tax_id} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ═══════════════════════════════════════════════
+                        SECCIÓN: COBRO DIGITAL & QR SIMPLE PARA COTIZACIONES
+                       ═══════════════════════════════════════════════ */}
+                    <div className="bg-white dark:bg-[#0b132b] rounded-3xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 shadow-xs space-y-6 transition-colors">
+                        <div className="border-b border-slate-200 dark:border-white/10 pb-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-orange-500">
+                                    PAGOS DIGITALES BOLIVIA
+                                </span>
+                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-500/20">
+                                    🇧🇴 QR Simple Interbancario
+                                </span>
+                            </div>
+                            <h3 className="text-lg font-black text-slate-900 dark:text-white mt-0.5">
+                                Código QR de Cobro & Cuentas Bancarias
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                Sube la imagen de tu código QR Simple (Banco Unión, BCP, BNB, etc.). Se estampará automáticamente en el pie de tus cotizaciones y notas de venta oficiales para que tus clientes puedan pagar al escanear la imagen.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                            {/* Previsualización del QR */}
+                            <div className="md:col-span-4 flex flex-col items-center">
+                                <div className="relative group">
+                                    <div className="w-44 h-44 rounded-2xl bg-white dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-white/20 p-2 shadow-md flex items-center justify-center overflow-hidden">
+                                        {qrPreview ? (
+                                            <img
+                                                src={qrPreview}
+                                                alt="QR de Pago"
+                                                className="w-full h-full object-contain rounded-xl"
+                                            />
+                                        ) : (
+                                            <div className="text-center p-3 text-slate-400">
+                                                <span className="text-4xl block mb-1">📱</span>
+                                                <span className="text-[11px] font-bold uppercase block">Sin QR Configurado</span>
+                                                <span className="text-[9px] text-slate-400">Sube tu QR Simple para tus cotizaciones</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {qrPreview && (
+                                        <button
+                                            type="button"
+                                            onClick={handleRemoveQr}
+                                            className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center text-xs shadow-md transition cursor-pointer"
+                                            title="Quitar QR"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
+                                <span className="text-[10px] text-slate-400 mt-2 text-center">
+                                    JPG, PNG o WEBP. Proporción cuadrada recomendada.
+                                </span>
+                            </div>
+
+                            {/* Inputs de Carga y Cuentas Bancarias */}
+                            <div className="md:col-span-8 space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setQrInputMode('file')}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                                            qrInputMode === 'file'
+                                                ? 'bg-blue-600 text-white shadow-xs'
+                                                : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                                        }`}
+                                    >
+                                        📁 Subir Archivo QR
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setQrInputMode('url')}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                                            qrInputMode === 'url'
+                                                ? 'bg-blue-600 text-white shadow-xs'
+                                                : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                                        }`}
+                                    >
+                                        🔗 Enlace / URL
+                                    </button>
+                                </div>
+
+                                {qrInputMode === 'file' ? (
+                                    <div>
+                                        <input
+                                            ref={qrFileRef}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleQrFileChange}
+                                            className="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-orange-500 hover:file:bg-orange-600 file:text-white cursor-pointer"
+                                        />
+                                        <p className="text-[11px] text-slate-400 mt-1.5">
+                                            Sube la captura de pantalla de tu QR Simple generado desde tu banca móvil de Bolivia.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <TextInput
+                                            type="text"
+                                            value={typeof data.qr_payment === 'string' ? data.qr_payment : ''}
+                                            onChange={(e) => handleQrUrlChange(e.target.value)}
+                                            placeholder="https://ejemplo.com/mi-qr-simple.png"
+                                            className="w-full text-xs"
+                                        />
+                                    </div>
+                                )}
+                                <InputError message={errors.qr_payment} />
+
+                                {/* Cuentas Bancarias / Instrucciones de Transferencia */}
+                                <div className="pt-2">
+                                    <InputLabel htmlFor="bank_account_info" value="Cuentas Bancarias para Transferencias (Opcional)" />
+                                    <textarea
+                                        id="bank_account_info"
+                                        rows="2"
+                                        value={data.bank_account_info}
+                                        onChange={(e) => setData('bank_account_info', e.target.value)}
+                                        placeholder="Ej. Banco Unión Cta Cte: 100000123456 a nombre de Mi Empresa SRL / BCP Cta Ahorros: 201-123456"
+                                        className="mt-1 block w-full rounded-2xl border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-slate-800 dark:text-white shadow-xs text-xs focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                    <span className="text-[10px] text-slate-400 mt-1 block">
+                                        Estos datos aparecerán al pie de tus cotizaciones impresas o exportadas en imagen.
+                                    </span>
+                                    <InputError message={errors.bank_account_info} />
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -47,6 +47,8 @@ class CompanyController extends Controller
             'banner' => 'nullable',
             'banner_2' => 'nullable',
             'banner_3' => 'nullable',
+            'qr_payment' => 'nullable',
+            'bank_account_info' => 'nullable|string|max:1000',
         ]);
 
         // Procesar foto de perfil / logo
@@ -85,6 +87,24 @@ class CompanyController extends Controller
             } else {
                 unset($validated[$bannerField]);
             }
+        }
+
+        // Procesar Código QR de Cobro / Pago Simple para Cotizaciones
+        if ($request->hasFile('qr_payment')) {
+            $request->validate([
+                'qr_payment' => ['image', 'mimes:jpeg,png,jpg,webp,svg', 'max:8192'],
+            ], [
+                'qr_payment.image' => 'El código QR debe ser un archivo de imagen válido (JPG, PNG, WEBP, SVG).',
+                'qr_payment.max' => 'La imagen del QR no debe superar los 8MB.',
+            ]);
+
+            $validated['qr_payment'] = ImageOptimizer::storeAsWebp($request->file('qr_payment'), 'companies/qr', 800, 800, 90);
+        } elseif ($request->filled('qr_payment') && is_string($request->qr_payment)) {
+            $validated['qr_payment'] = $request->qr_payment;
+        } elseif ($request->boolean('remove_qr_payment')) {
+            $validated['qr_payment'] = null;
+        } else {
+            unset($validated['qr_payment']);
         }
 
         if (!$company) {

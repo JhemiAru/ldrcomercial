@@ -487,46 +487,64 @@ export default function DocumentPreviewModal({
 
                                 {/* Métodos de Pago y QR Simple Bolivia */}
                                 <div className="flex items-center gap-4 p-3 bg-orange-50/60 rounded-xl border border-orange-200/80">
-                                    {/* Gráfico SVG de Código QR Simulado */}
-                                    <div className="w-20 h-20 bg-white p-1 rounded-lg border border-orange-300 shadow-xs shrink-0 flex items-center justify-center">
-                                        <svg viewBox="0 0 100 100" className="w-full h-full text-slate-900 fill-current">
-                                            {/* Representación visual de código QR */}
-                                            <rect x="5" y="5" width="25" height="25" rx="3" fill="#000" />
-                                            <rect x="10" y="10" width="15" height="15" fill="#fff" />
-                                            <rect x="13" y="13" width="9" height="9" fill="#000" />
+                                    {company?.qr_payment ? (
+                                        <div className="w-24 h-24 bg-white p-1.5 rounded-xl border border-orange-300 shadow-sm shrink-0 flex items-center justify-center overflow-hidden">
+                                            <img
+                                                src={company.qr_payment}
+                                                alt="QR Simple de Cobro"
+                                                className="w-full h-full object-contain rounded-lg"
+                                            />
+                                        </div>
+                                    ) : (
+                                        /* Gráfico SVG de Código QR Simulado cuando no hay QR subido */
+                                        <div className="w-20 h-20 bg-white p-1 rounded-lg border border-orange-300 shadow-xs shrink-0 flex items-center justify-center">
+                                            <svg viewBox="0 0 100 100" className="w-full h-full text-slate-900 fill-current">
+                                                <rect x="5" y="5" width="25" height="25" rx="3" fill="#000" />
+                                                <rect x="10" y="10" width="15" height="15" fill="#fff" />
+                                                <rect x="13" y="13" width="9" height="9" fill="#000" />
 
-                                            <rect x="70" y="5" width="25" height="25" rx="3" fill="#000" />
-                                            <rect x="75" y="10" width="15" height="15" fill="#fff" />
-                                            <rect x="78" y="13" width="9" height="9" fill="#000" />
+                                                <rect x="70" y="5" width="25" height="25" rx="3" fill="#000" />
+                                                <rect x="75" y="10" width="15" height="15" fill="#fff" />
+                                                <rect x="78" y="13" width="9" height="9" fill="#000" />
 
-                                            <rect x="5" y="70" width="25" height="25" rx="3" fill="#000" />
-                                            <rect x="10" y="75" width="15" height="15" fill="#fff" />
-                                            <rect x="13" y="78" width="9" height="9" fill="#000" />
+                                                <rect x="5" y="70" width="25" height="25" rx="3" fill="#000" />
+                                                <rect x="10" y="75" width="15" height="15" fill="#fff" />
+                                                <rect x="13" y="78" width="9" height="9" fill="#000" />
 
-                                            <rect x="35" y="10" width="8" height="8" fill="#000" />
-                                            <rect x="50" y="10" width="12" height="6" fill="#000" />
-                                            <rect x="40" y="25" width="20" height="8" fill="#000" />
-                                            <rect x="10" y="40" width="8" height="20" fill="#000" />
-                                            <rect x="25" y="45" width="15" height="15" fill="#ea580c" />
-                                            <rect x="48" y="40" width="10" height="10" fill="#000" />
-                                            <rect x="65" y="40" width="8" height="18" fill="#000" />
-                                            <rect x="80" y="45" width="12" height="12" fill="#000" />
-                                            <rect x="38" y="65" width="22" height="8" fill="#000" />
-                                            <rect x="45" y="80" width="15" height="12" fill="#000" />
-                                            <rect x="70" y="70" width="22" height="22" fill="#000" />
-                                            <rect x="75" y="75" width="12" height="12" fill="#fff" />
-                                        </svg>
-                                    </div>
-                                    <div className="text-xs text-slate-700 leading-tight">
+                                                <rect x="35" y="10" width="8" height="8" fill="#000" />
+                                                <rect x="50" y="10" width="12" height="6" fill="#000" />
+                                                <rect x="40" y="25" width="20" height="8" fill="#000" />
+                                                <rect x="10" y="40" width="8" height="20" fill="#000" />
+                                                <rect x="25" y="45" width="15" height="15" fill="#ea580c" />
+                                                <rect x="48" y="40" width="10" height="10" fill="#000" />
+                                                <rect x="65" y="40" width="8" height="18" fill="#000" />
+                                                <rect x="80" y="45" width="12" height="12" fill="#000" />
+                                                <rect x="38" y="65" width="22" height="8" fill="#000" />
+                                                <rect x="45" y="80" width="15" height="12" fill="#000" />
+                                                <rect x="70" y="70" width="22" height="22" fill="#000" />
+                                                <rect x="75" y="75" width="12" height="12" fill="#fff" />
+                                            </svg>
+                                        </div>
+                                    )}
+
+                                    <div className="text-xs text-slate-700 leading-tight flex-1 min-w-0">
                                         <div className="font-black text-slate-900 text-[11px] uppercase tracking-wide flex items-center gap-1">
                                             <span>🇧🇴</span> Pago con QR Simple Bolivia
                                         </div>
                                         <p className="text-[11px] text-slate-600 mt-1">
-                                            Aceptamos transferencias interbancarias inmediatas sin costo adicional.
+                                            {company?.qr_payment
+                                                ? 'Escanea este código QR desde cualquier aplicación bancaria de Bolivia para pagar al instante.'
+                                                : 'Aceptamos transferencias interbancarias inmediatas sin costo adicional.'}
                                         </p>
-                                        <p className="text-[10px] text-slate-500 font-mono mt-1">
-                                            Banco Unión / Banco BCP / Banco Mercantil
-                                        </p>
+                                        {company?.bank_account_info ? (
+                                            <p className="text-[10px] text-slate-800 font-semibold mt-1.5 p-1.5 bg-white/90 rounded-lg border border-orange-200/80 whitespace-pre-line leading-tight">
+                                                {company.bank_account_info}
+                                            </p>
+                                        ) : (
+                                            <p className="text-[10px] text-slate-500 font-mono mt-1">
+                                                Banco Unión / Banco BCP / Banco Mercantil / BNB
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>

@@ -22,6 +22,8 @@ class Company extends Model
         'banner',
         'banner_2',
         'banner_3',
+        'qr_payment',
+        'bank_account_info',
         'short_description',
         'description',
         'phone',
