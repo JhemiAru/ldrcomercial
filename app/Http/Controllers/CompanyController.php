@@ -35,6 +35,7 @@ class CompanyController extends Controller
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'department' => 'nullable|string|max:100',
+            'google_maps_link' => 'nullable|string|max:500',
             'phone' => 'nullable|string|max:50',
             'whatsapp' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',

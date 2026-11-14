@@ -25,6 +25,7 @@ export default function EditCompany({ company, categories = [], status }) {
         address: company?.address || '',
         city: company?.city || '',
         department: company?.department || '',
+        google_maps_link: company?.google_maps_link || '',
         logo: null,
         remove_logo: false,
         banner: null,
@@ -962,6 +963,41 @@ export default function EditCompany({ company, categories = [], status }) {
                                     placeholder="ventas@tuempresa.bo"
                                 />
                                 <InputError message={errors.email} />
+                            </div>
+
+                            {/* Enlace de Google Maps */}
+                            <div className="md:col-span-3">
+                                <div className="flex items-center justify-between">
+                                    <InputLabel htmlFor="google_maps_link" value="Enlace o Ubicación de Google Maps (URL Directa)" />
+                                    {data.google_maps_link && (
+                                        <a
+                                            href={data.google_maps_link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                                        >
+                                            <span>🗺️ Probar Enlace</span>
+                                            <span>↗</span>
+                                        </a>
+                                    )}
+                                </div>
+                                <div className="mt-1 relative rounded-xl shadow-xs">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
+                                        📍
+                                    </div>
+                                    <TextInput
+                                        id="google_maps_link"
+                                        type="url"
+                                        className="pl-9 block w-full text-xs sm:text-sm font-medium"
+                                        value={data.google_maps_link}
+                                        onChange={(e) => setData('google_maps_link', e.target.value)}
+                                        placeholder="Ej. https://maps.app.goo.gl/Xyz123 o https://goo.gl/maps/..."
+                                    />
+                                </div>
+                                <p className="text-[11px] text-slate-400 mt-1">
+                                    Pega el enlace compartido de Google Maps de tu local o almacén. Al hacer clic en tu perfil o chatbot, los clientes se dirigirán exactamente a este punto en Google Maps.
+                                </p>
+                                <InputError message={errors.google_maps_link} />
                             </div>
                         </div>
                     </div>

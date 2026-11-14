@@ -154,7 +154,9 @@ export default function Show({ company, categories }) {
         return `https://wa.me/591${cleanPhone}?text=${encodeURIComponent(msg)}`;
     };
 
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.address || ''} ${company.city || ''} Bolivia`)}`;
+    const googleMapsUrl = company.google_maps_link
+        ? (company.google_maps_link.startsWith('http') ? company.google_maps_link : `https://${company.google_maps_link}`)
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.address || ''} ${company.city || ''} Bolivia`)}`;
 
     const handleShare = () => {
         if (typeof window !== 'undefined' && navigator.clipboard) {

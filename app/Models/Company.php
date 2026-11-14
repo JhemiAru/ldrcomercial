@@ -35,6 +35,7 @@ class Company extends Model
         'department',
         'latitude',
         'longitude',
+        'google_maps_link',
         'facebook',
         'instagram',
         'tiktok',

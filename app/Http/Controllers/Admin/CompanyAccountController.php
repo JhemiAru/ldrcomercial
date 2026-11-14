@@ -133,6 +133,7 @@ class CompanyAccountController extends Controller
             'tax_id' => ['nullable', 'string', 'max:50'],
             'city' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string', 'max:255'],
+            'google_maps_link' => ['nullable', 'string', 'max:500'],
         ], [
             'email.unique' => 'Ya existe un usuario con este correo electrónico.',
             'company_name.required' => 'El nombre de la empresa es obligatorio.',
@@ -155,6 +156,7 @@ class CompanyAccountController extends Controller
             'tax_id' => $validated['tax_id'] ?? null,
             'city' => $validated['city'] ?? 'Bolivia',
             'address' => $validated['address'] ?? null,
+            'google_maps_link' => $validated['google_maps_link'] ?? null,
             'phone' => $validated['phone'] ?? null,
             'whatsapp' => $validated['phone'] ?? null,
             'email' => $validated['email'],
@@ -184,6 +186,7 @@ class CompanyAccountController extends Controller
             'city' => ['nullable', 'string', 'max:100'],
             'department' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string', 'max:255'],
+            'google_maps_link' => ['nullable', 'string', 'max:500'],
             'phone' => ['nullable', 'string', 'max:50'],
             'whatsapp' => ['nullable', 'string', 'max:50'],
             'email' => ['nullable', 'string', 'email', 'max:255'],

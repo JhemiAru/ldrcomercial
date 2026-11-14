@@ -12,7 +12,9 @@ export default function CompanyChatbot({ company }) {
     const cleanPhone = (company.whatsapp || company.phone || '').replace(/[^0-9]/g, '');
     const products = company.products || [];
 
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.address || ''} ${company.city || ''} Bolivia`)}`;
+    const googleMapsUrl = company.google_maps_link
+        ? (company.google_maps_link.startsWith('http') ? company.google_maps_link : `https://${company.google_maps_link}`)
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.address || ''} ${company.city || ''} Bolivia`)}`;
 
     const getWhatsAppUrl = (customText) => {
         if (!cleanPhone) return '#';
