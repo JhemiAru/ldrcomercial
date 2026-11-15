@@ -126,9 +126,101 @@ export default function DocumentPreviewModal({
         setTimeout(() => setActionNotice(null), 6000);
     };
 
-    // Manejador de Impresión
+    // Manejador de Impresión Profesional con Iframe Aislado
     const handlePrint = () => {
-        window.print();
+        const printContent = document.getElementById('printable-document-sheet');
+        if (!printContent) {
+            window.print();
+            return;
+        }
+
+        // Crear o reutilizar un iframe invisible para aislar la impresión del modal
+        let iframe = document.getElementById('thermal-print-frame');
+        if (!iframe) {
+            iframe = document.createElement('iframe');
+            iframe.id = 'thermal-print-frame';
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0px';
+            iframe.style.height = '0px';
+            iframe.style.border = 'none';
+            document.body.appendChild(iframe);
+        }
+
+        const iframeDoc = iframe.contentWindow.document;
+        iframeDoc.open();
+
+        // Extraer todos los estilos del documento actual (Tailwind y estilos de la aplicación)
+        const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+            .map((el) => el.outerHTML)
+            .join('\n');
+
+        const isThermalTicket = printFormat === 'thermal55' || printFormat === 'thermal80';
+        const pageWidth = printFormat === 'thermal55' ? '55mm' : printFormat === 'thermal80' ? '80mm' : 'auto';
+        const pageMargin = isThermalTicket ? '0mm' : '8mm';
+        const bodyPadding = printFormat === 'thermal55' ? '1mm 1mm' : printFormat === 'thermal80' ? '2mm 2mm' : '10mm';
+        const bodyWidth = printFormat === 'thermal55' ? '55mm' : printFormat === 'thermal80' ? '80mm' : '100%';
+
+        iframeDoc.write(`
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="utf-8">
+                <title>${isQuotation ? 'Cotización' : 'Nota de Venta'} #${doc.id}</title>
+                ${styles}
+                <style>
+                    @page {
+                        size: ${pageWidth} auto;
+                        margin: ${pageMargin} !important;
+                    }
+                    * {
+                        box-sizing: border-box !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                    html, body {
+                        width: ${bodyWidth} !important;
+                        max-width: ${bodyWidth} !important;
+                        margin: 0 !important;
+                        padding: ${bodyPadding} !important;
+                        background: #ffffff !important;
+                        color: #000000 !important;
+                        font-family: ${
+                            isThermalTicket
+                                ? "'Courier New', Courier, monospace"
+                                : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                        } !important;
+                        -webkit-font-smoothing: ${isThermalTicket ? 'none' : 'antialiased'} !important;
+                    }
+                    .thermal-print-wrapper {
+                        width: 100% !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: #ffffff !important;
+                        color: #000000 !important;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="thermal-print-wrapper">
+                    ${printContent.innerHTML}
+                </div>
+            </body>
+            </html>
+        `);
+        iframeDoc.close();
+
+        // Breve retraso para que carguen fuentes e imágenes y lanzar la ventana de impresión
+        setTimeout(() => {
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } catch (e) {
+                console.error('Error al imprimir por iframe:', e);
+                window.print();
+            }
+        }, 350);
     };
 
     // Copiar resumen de la cotización/venta
@@ -181,77 +273,19 @@ export default function DocumentPreviewModal({
                                 ? '80mm auto'
                                 : 'letter portrait'
                         };
-                        margin: ${printFormat === 'letter' ? '8mm' : '0mm'} !important;
+                        margin: ${isThermal ? '0mm' : '8mm'} !important;
+                    }
+                    .no-print {
+                        display: none !important;
                     }
                     html, body {
-                        width: ${
-                            printFormat === 'thermal55'
-                                ? '55mm'
-                                : printFormat === 'thermal80'
-                                ? '80mm'
-                                : '100%'
-                        } !important;
+                        width: 100% !important;
                         margin: 0 !important;
                         padding: 0 !important;
                         background: #ffffff !important;
                         color: #000000 !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
-                    }
-                    body * {
-                        visibility: hidden !important;
-                    }
-                    #printable-document-sheet, #printable-document-sheet * {
-                        visibility: visible !important;
-                    }
-                    #printable-document-sheet {
-                        position: absolute !important;
-                        left: 0 !important;
-                        top: 0 !important;
-                        width: ${
-                            printFormat === 'thermal55'
-                                ? '55mm'
-                                : printFormat === 'thermal80'
-                                ? '80mm'
-                                : '100%'
-                        } !important;
-                        max-width: ${
-                            printFormat === 'thermal55'
-                                ? '55mm'
-                                : printFormat === 'thermal80'
-                                ? '80mm'
-                                : '100%'
-                        } !important;
-                        min-width: ${
-                            printFormat === 'thermal55'
-                                ? '55mm'
-                                : printFormat === 'thermal80'
-                                ? '80mm'
-                                : 'auto'
-                        } !important;
-                        min-height: auto !important;
-                        margin: 0 !important;
-                        padding: ${
-                            printFormat === 'thermal55'
-                                ? '2mm 1.5mm'
-                                : printFormat === 'thermal80'
-                                ? '3mm 2.5mm'
-                                : '10mm'
-                        } !important;
-                        box-shadow: none !important;
-                        border: none !important;
-                        background: #ffffff !important;
-                        color: #000000 !important;
-                        font-family: ${
-                            isThermal
-                                ? "'Courier New', Courier, monospace !important"
-                                : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important'
-                        };
-                        -webkit-font-smoothing: ${isThermal ? 'none !important' : 'antialiased !important'};
-                        text-rendering: ${isThermal ? 'geometricPrecision !important' : 'auto !important'};
-                    }
-                    .no-print {
-                        display: none !important;
                     }
                 }
             `}</style>
