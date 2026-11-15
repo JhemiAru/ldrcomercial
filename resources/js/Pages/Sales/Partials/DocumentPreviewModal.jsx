@@ -21,6 +21,7 @@ export default function DocumentPreviewModal({
     const [doc, setDoc] = useState(initialDoc);
     const [withTax, setWithTax] = useState(false); // 13% IVA Bolivia
     const [printFormat, setPrintFormat] = useState('thermal55'); // 'thermal55' | 'thermal80' | 'letter'
+    const [showLogoOnTicket, setShowLogoOnTicket] = useState(false); // En ticket térmico muchas veces el logo a color se mancha
     const [copiedNotification, setCopiedNotification] = useState(false);
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
     const [actionNotice, setActionNotice] = useState(null);
@@ -241,7 +242,13 @@ export default function DocumentPreviewModal({
                         border: none !important;
                         background: #ffffff !important;
                         color: #000000 !important;
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, monospace !important;
+                        font-family: ${
+                            isThermal
+                                ? "'Courier New', Courier, monospace !important"
+                                : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important'
+                        };
+                        -webkit-font-smoothing: ${isThermal ? 'none !important' : 'antialiased !important'};
+                        text-rendering: ${isThermal ? 'geometricPrecision !important' : 'auto !important'};
                     }
                     .no-print {
                         display: none !important;
@@ -331,6 +338,22 @@ export default function DocumentPreviewModal({
                         >
                             {withTax ? '✓ Con Factura (IVA 13%)' : '+ IVA (13%)'}
                         </button>
+
+                        {/* Toggle de Logo en Ticket Térmico */}
+                        {isThermal && (
+                            <button
+                                type="button"
+                                onClick={() => setShowLogoOnTicket(!showLogoOnTicket)}
+                                className={`px-2.5 py-1.5 text-xs font-bold rounded-xl border transition ${
+                                    showLogoOnTicket
+                                        ? 'bg-emerald-600 text-white border-emerald-700'
+                                        : 'bg-white dark:bg-white/5 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-white/10 hover:bg-slate-100'
+                                }`}
+                                title="Activar/Desactivar el logo en el ticket para evitar manchas de tinta térmica"
+                            >
+                                <span>{showLogoOnTicket ? '🖼️ Con Logo' : '🚫 Sin Logo (Más Nítido)'}</span>
+                            </button>
+                        )}
 
                         {/* Botón Descargar Imagen */}
                         <button
@@ -425,17 +448,17 @@ export default function DocumentPreviewModal({
                         {isThermal ? (
                             /* ═══════════════════════════════════════════════
                                FORMATO TICKET TÉRMICO (55mm / 80mm)
-                               Optimizado para impresoras térmicas y tickets
+                               Diseño POS de alto contraste y máxima nitidez
                                ═══════════════════════════════════════════════ */
-                            <div className="font-sans text-black leading-tight text-[11px] select-text">
+                            <div className="font-mono text-black leading-tight text-[11px] select-text">
                                 {/* Encabezado del Ticket */}
-                                <div className="text-center pb-2 border-b-2 border-dashed border-black">
-                                    {company?.logo && (
-                                        <div className="w-12 h-12 mx-auto mb-1 overflow-hidden flex items-center justify-center">
+                                <div className="text-center pb-2 border-b border-black">
+                                    {showLogoOnTicket && company?.logo && (
+                                        <div className="w-14 h-14 mx-auto mb-1.5 overflow-hidden flex items-center justify-center">
                                             <img
                                                 src={company.logo}
                                                 alt={companyName}
-                                                className="max-h-full max-w-full object-contain filter grayscale contrast-150"
+                                                className="max-h-full max-w-full object-contain filter contrast-200 grayscale"
                                             />
                                         </div>
                                     )}
@@ -443,70 +466,70 @@ export default function DocumentPreviewModal({
                                         {companyName}
                                     </h2>
                                     {companyLegal && companyLegal !== companyName && (
-                                        <p className="text-[10px] font-semibold text-neutral-800 mt-0.5">
+                                        <p className="text-[10px] font-bold text-neutral-800 mt-0.5">
                                             {companyLegal}
                                         </p>
                                     )}
-                                    <p className="text-[10px] font-mono mt-0.5 font-bold">
+                                    <p className="text-[10px] font-bold mt-0.5">
                                         NIT: {companyNit} • Bolivia
                                     </p>
-                                    <p className="text-[10px] leading-snug mt-0.5">
+                                    <p className="text-[9px] leading-snug mt-0.5 font-semibold">
                                         {companyAddress}{companyCity ? `, ${companyCity}` : ''}
                                     </p>
                                     {companyPhone && (
-                                        <p className="text-[10px] font-mono mt-0.5">
+                                        <p className="text-[10px] font-bold mt-0.5">
                                             Tel / WhatsApp: {companyPhone}
                                         </p>
                                     )}
                                 </div>
 
                                 {/* Identificación de Documento */}
-                                <div className="text-center py-2 border-b border-dashed border-black">
+                                <div className="text-center py-1.5 border-b border-black">
                                     <div className="text-xs font-black uppercase tracking-wider">
                                         {isQuotation ? 'COTIZACIÓN / PROFORMA' : 'NOTA DE VENTA'}
                                     </div>
-                                    <div className="font-mono font-black text-sm my-0.5">
+                                    <div className="text-sm font-black my-0.5">
                                         #{doc.id}
                                     </div>
-                                    <div className="text-[10px] text-neutral-800 flex justify-between px-1 mt-1 font-mono">
-                                        <span>Fecha: <strong>{doc.date}</strong></span>
+                                    <div className="text-[10px] flex justify-between px-0.5 mt-0.5 font-bold">
+                                        <span>Fecha: {doc.date}</span>
                                         {isQuotation && (
-                                            <span>Validez: <strong>{doc.due_date || '15 días'}</strong></span>
+                                            <span>Validez: {doc.due_date || '15 días'}</span>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Datos del Cliente */}
-                                <div className="py-2 border-b border-dashed border-black text-[10px] space-y-0.5">
-                                    <div className="flex justify-between items-start gap-1">
-                                        <span className="font-bold shrink-0">Cliente:</span>
-                                        <span className="font-black text-right truncate">{doc.client_name}</span>
+                                {/* Datos del Cliente (En filas directas para máxima legibilidad en 55mm) */}
+                                <div className="py-1.5 border-b border-black text-[10px] leading-tight space-y-0.5">
+                                    <div>
+                                        <span className="font-bold">Cliente: </span>
+                                        <span className="font-black uppercase">{doc.client_name}</span>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-bold">NIT / C.I.:</span>
-                                        <span className="font-mono">{doc.client_nit || 'Sin Número / Consumidor Final'}</span>
+                                    <div>
+                                        <span className="font-bold">NIT/CI: </span>
+                                        <span>{doc.client_nit || 'Sin Número / Consumidor Final'}</span>
                                     </div>
                                     {doc.client_phone && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="font-bold">Teléfono:</span>
-                                            <span className="font-mono">{doc.client_phone}</span>
+                                        <div>
+                                            <span className="font-bold">Teléfono: </span>
+                                            <span>{doc.client_phone}</span>
                                         </div>
                                     )}
                                     {doc.client_city && (
-                                        <div className="flex justify-between items-center">
-                                            <span className="font-bold">Ciudad:</span>
+                                        <div>
+                                            <span className="font-bold">Ciudad: </span>
                                             <span>{doc.client_city}</span>
                                         </div>
                                     )}
                                 </div>
 
                                 {/* Detalle de Ítems / Productos */}
-                                <div className="py-2 border-b border-dashed border-black">
-                                    <div className="flex justify-between font-mono font-black text-[9px] uppercase tracking-wider pb-1 border-b border-black">
+                                <div className="py-1.5 border-b border-black">
+                                    <div className="flex justify-between font-bold text-[9px] uppercase tracking-wider pb-1 border-b border-black">
                                         <span>CANT / DESCRIPCIÓN</span>
                                         <span>TOTAL</span>
                                     </div>
-                                    <div className="divide-y divide-dashed divide-neutral-300 py-1 space-y-1">
+                                    <div className="divide-y divide-neutral-300 py-1 space-y-1">
                                         {doc.items.map((item, index) => {
                                             const qty = Number(item.quantity) || 0;
                                             const price = Number(item.price) || 0;
@@ -516,18 +539,18 @@ export default function DocumentPreviewModal({
                                             const lineTotal = lineBase - lineDiscount;
 
                                             return (
-                                                <div key={item.id || index} className="pt-1 text-[10px]">
-                                                    <div className="font-bold leading-tight uppercase">
+                                                <div key={item.id || index} className="pt-1 text-[10px] leading-tight">
+                                                    <div className="font-black uppercase">
                                                         {item.name}
                                                     </div>
-                                                    <div className="flex justify-between items-baseline font-mono text-[9px] mt-0.5">
+                                                    <div className="flex justify-between items-baseline text-[10px] mt-0.5">
                                                         <span>
                                                             {qty} {item.unit || 'pza'} × Bs. {price.toFixed(2)}
                                                             {discount > 0 && (
-                                                                <span className="ml-1 text-[8px] font-bold">(-{discount}%)</span>
+                                                                <span className="font-bold ml-1">(-{discount}%)</span>
                                                             )}
                                                         </span>
-                                                        <span className="font-black text-[10px]">
+                                                        <span className="font-black">
                                                             Bs. {lineTotal.toFixed(2)}
                                                         </span>
                                                     </div>
@@ -538,41 +561,41 @@ export default function DocumentPreviewModal({
                                 </div>
 
                                 {/* Totales Numéricos */}
-                                <div className="py-2 border-b border-dashed border-black space-y-1 text-[10px]">
+                                <div className="py-1.5 border-b border-black space-y-1 text-[10px]">
                                     <div className="flex justify-between">
                                         <span>Subtotal:</span>
-                                        <span className="font-mono">Bs. {totals.subtotal.toFixed(2)}</span>
+                                        <span className="font-bold">Bs. {totals.subtotal.toFixed(2)}</span>
                                     </div>
                                     {totals.totalDiscount > 0 && (
                                         <div className="flex justify-between">
                                             <span>Descuento:</span>
-                                            <span className="font-mono">- Bs. {totals.totalDiscount.toFixed(2)}</span>
+                                            <span className="font-bold">- Bs. {totals.totalDiscount.toFixed(2)}</span>
                                         </div>
                                     )}
                                     {withTax && (
                                         <div className="flex justify-between">
                                             <span>IVA (13%):</span>
-                                            <span className="font-mono">+ Bs. {totals.tax.toFixed(2)}</span>
+                                            <span className="font-bold">+ Bs. {totals.tax.toFixed(2)}</span>
                                         </div>
                                     )}
-                                    <div className="border-y-2 border-black py-1.5 my-1 flex justify-between items-center">
-                                        <span className="font-black text-xs uppercase">TOTAL A PAGAR:</span>
-                                        <span className="font-mono font-black text-sm">
+                                    <div className="border-y-2 border-black py-1 my-1 flex justify-between items-center text-xs font-black">
+                                        <span>TOTAL A PAGAR:</span>
+                                        <span className="text-sm">
                                             Bs. {totals.grandTotal.toFixed(2)}
                                         </span>
                                     </div>
-                                    <div className="text-[8px] uppercase tracking-tight text-center leading-tight pt-0.5">
+                                    <div className="text-[8px] uppercase tracking-tight text-center leading-tight pt-0.5 font-bold">
                                         SON: {numberToBolivianosWords(totals.grandTotal)}
                                     </div>
                                 </div>
 
                                 {/* QR de Pago Simple Bolivia */}
-                                <div className="py-2 border-b border-dashed border-black text-center">
+                                <div className="py-2 border-b border-black text-center">
                                     <div className="font-black uppercase tracking-wider text-[10px] mb-1">
-                                        PAGO CON QR SIMPLE BOLIVIA
+                                        === PAGO CON QR SIMPLE ===
                                     </div>
                                     {company?.qr_payment ? (
-                                        <div className="w-32 h-32 mx-auto p-1 bg-white border border-black rounded-lg flex items-center justify-center my-1">
+                                        <div className="w-32 h-32 mx-auto p-1 bg-white border border-black rounded flex items-center justify-center my-1">
                                             <img
                                                 src={company.qr_payment}
                                                 alt="QR Simple de Cobro"
@@ -580,7 +603,7 @@ export default function DocumentPreviewModal({
                                             />
                                         </div>
                                     ) : (
-                                        <div className="w-24 h-24 mx-auto p-1 bg-white border border-black rounded-lg flex items-center justify-center my-1">
+                                        <div className="w-28 h-28 mx-auto p-1 bg-white border border-black rounded flex items-center justify-center my-1">
                                             <svg viewBox="0 0 100 100" className="w-full h-full fill-black">
                                                 <rect x="5" y="5" width="25" height="25" rx="2" fill="#000" />
                                                 <rect x="10" y="10" width="15" height="15" fill="#fff" />
@@ -609,11 +632,11 @@ export default function DocumentPreviewModal({
                                             </svg>
                                         </div>
                                     )}
-                                    <p className="text-[8px] text-neutral-800 leading-tight">
+                                    <p className="text-[8px] text-neutral-800 leading-tight font-bold">
                                         Escanea desde cualquier app bancaria de Bolivia (QR Simple)
                                     </p>
                                     {company?.bank_account_info && (
-                                        <p className="text-[8px] font-semibold mt-1 p-1 bg-neutral-100 border border-neutral-300 rounded whitespace-pre-line leading-tight">
+                                        <p className="text-[8px] font-bold mt-1 p-1 bg-neutral-100 border border-neutral-300 rounded whitespace-pre-line leading-tight">
                                             {company.bank_account_info}
                                         </p>
                                     )}
@@ -621,8 +644,8 @@ export default function DocumentPreviewModal({
 
                                 {/* Pie del Ticket Térmico */}
                                 <div className="pt-2 text-[9px] text-center space-y-1">
-                                    <p><strong>Pago:</strong> {doc.payment_terms || 'Contado / QR'}</p>
-                                    <p><strong>Entrega:</strong> {doc.delivery_time || 'Inmediata'}</p>
+                                    <p><span className="font-bold">Pago:</span> {doc.payment_terms || 'Contado / QR'}</p>
+                                    <p><span className="font-bold">Entrega:</span> {doc.delivery_time || 'Inmediata'}</p>
                                     {doc.notes && (
                                         <p className="italic text-[8px] text-neutral-700 bg-neutral-100 p-1 rounded">
                                             {doc.notes}
