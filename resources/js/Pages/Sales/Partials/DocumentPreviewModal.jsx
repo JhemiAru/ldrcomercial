@@ -20,7 +20,7 @@ export default function DocumentPreviewModal({
 
     const [doc, setDoc] = useState(initialDoc);
     const [withTax, setWithTax] = useState(false); // 13% IVA Bolivia
-    const [templateTheme, setTemplateTheme] = useState('modern'); // 'modern' | 'classic' | 'receipt'
+    const [printFormat, setPrintFormat] = useState('thermal55'); // 'thermal55' | 'thermal80' | 'letter'
     const [copiedNotification, setCopiedNotification] = useState(false);
     const [isGeneratingImage, setIsGeneratingImage] = useState(false);
     const [actionNotice, setActionNotice] = useState(null);
@@ -165,28 +165,83 @@ export default function DocumentPreviewModal({
     const companyPhone = company?.phone || company?.whatsapp || '+591 2 2440000';
     const companyEmail = company?.email || 'contacto@empresa.bo';
 
+    const isThermal = printFormat === 'thermal55' || printFormat === 'thermal80';
+
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 print:p-0 print:bg-white print:static print:inset-auto">
-            {/* ESTILOS CSS EXCLUSIVOS PARA IMPRESIÓN Y PDF */}
+            {/* ESTILOS CSS DINÁMICOS EXCLUSIVOS PARA IMPRESIÓN Y PDF */}
             <style>{`
                 @media print {
+                    @page {
+                        size: ${
+                            printFormat === 'thermal55'
+                                ? '55mm auto'
+                                : printFormat === 'thermal80'
+                                ? '80mm auto'
+                                : 'letter portrait'
+                        };
+                        margin: ${printFormat === 'letter' ? '8mm' : '0mm'} !important;
+                    }
+                    html, body {
+                        width: ${
+                            printFormat === 'thermal55'
+                                ? '55mm'
+                                : printFormat === 'thermal80'
+                                ? '80mm'
+                                : '100%'
+                        } !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: #ffffff !important;
+                        color: #000000 !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
                     body * {
-                        visibility: hidden;
+                        visibility: hidden !important;
                     }
                     #printable-document-sheet, #printable-document-sheet * {
-                        visibility: visible;
+                        visibility: visible !important;
                     }
                     #printable-document-sheet {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100% !important;
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: ${
+                            printFormat === 'thermal55'
+                                ? '55mm'
+                                : printFormat === 'thermal80'
+                                ? '80mm'
+                                : '100%'
+                        } !important;
+                        max-width: ${
+                            printFormat === 'thermal55'
+                                ? '55mm'
+                                : printFormat === 'thermal80'
+                                ? '80mm'
+                                : '100%'
+                        } !important;
+                        min-width: ${
+                            printFormat === 'thermal55'
+                                ? '55mm'
+                                : printFormat === 'thermal80'
+                                ? '80mm'
+                                : 'auto'
+                        } !important;
+                        min-height: auto !important;
                         margin: 0 !important;
-                        padding: 20mm !important;
+                        padding: ${
+                            printFormat === 'thermal55'
+                                ? '2mm 1.5mm'
+                                : printFormat === 'thermal80'
+                                ? '3mm 2.5mm'
+                                : '10mm'
+                        } !important;
                         box-shadow: none !important;
                         border: none !important;
-                        background: white !important;
-                        color: #000 !important;
+                        background: #ffffff !important;
+                        color: #000000 !important;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, monospace !important;
                     }
                     .no-print {
                         display: none !important;
@@ -220,6 +275,49 @@ export default function DocumentPreviewModal({
 
                     {/* Controles de Configuración Rápida */}
                     <div className="flex items-center gap-2 flex-wrap">
+                        {/* Selector de Formato de Papel (Térmico vs Hoja Completa) */}
+                        <div className="flex items-center bg-slate-200/80 dark:bg-white/10 p-0.5 rounded-xl text-xs font-bold">
+                            <button
+                                type="button"
+                                onClick={() => setPrintFormat('thermal55')}
+                                className={`px-2.5 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+                                    printFormat === 'thermal55'
+                                        ? 'bg-orange-500 text-white shadow-xs'
+                                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                                }`}
+                                title="Formato Ticket de 55mm (ideal para papel térmico / etiquetadora)"
+                            >
+                                <span>🧾</span>
+                                <span>Ticket 55mm</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPrintFormat('thermal80')}
+                                className={`px-2.5 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+                                    printFormat === 'thermal80'
+                                        ? 'bg-orange-500 text-white shadow-xs'
+                                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                                }`}
+                                title="Formato Ticket de 80mm (impresoras térmicas POS estándar)"
+                            >
+                                <span>🧾</span>
+                                <span>Ticket 80mm</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPrintFormat('letter')}
+                                className={`px-2.5 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+                                    printFormat === 'letter'
+                                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
+                                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                                }`}
+                                title="Formato Hoja Completa A4 / Carta Membretada"
+                            >
+                                <span>📄</span>
+                                <span>Carta / A4</span>
+                            </button>
+                        </div>
+
                         {/* Selector de Impuesto / IVA Bolivia */}
                         <button
                             type="button"
@@ -231,7 +329,7 @@ export default function DocumentPreviewModal({
                             }`}
                             title="Desglosar el 13% de IVA oficial boliviano en la factura/proforma"
                         >
-                            {withTax ? '✓ Con Factura (IVA 13%)' : '+ Aplicar IVA (13%)'}
+                            {withTax ? '✓ Con Factura (IVA 13%)' : '+ IVA (13%)'}
                         </button>
 
                         {/* Botón Descargar Imagen */}
@@ -239,11 +337,11 @@ export default function DocumentPreviewModal({
                             type="button"
                             onClick={handleDownloadImage}
                             disabled={isGeneratingImage}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer"
-                            title="Descargar imagen PNG de alta resolución lista para enviar"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer"
+                            title="Descargar imagen PNG en el formato seleccionado"
                         >
                             <span>🖼️</span>
-                            <span>{isGeneratingImage ? 'Generando...' : 'Descargar Imagen'}</span>
+                            <span>{isGeneratingImage ? 'Generando...' : 'Imagen'}</span>
                         </button>
 
                         {/* Botón WhatsApp Imagen */}
@@ -255,18 +353,7 @@ export default function DocumentPreviewModal({
                             title="Descargar imagen y abrir WhatsApp del cliente"
                         >
                             <span>📲</span>
-                            <span>Enviar Imagen WhatsApp</span>
-                        </button>
-
-                        {/* Botón WhatsApp Texto */}
-                        <button
-                            type="button"
-                            onClick={handleWhatsAppShare}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-white/10 transition cursor-pointer"
-                            title="Enviar resumen en texto por WhatsApp"
-                        >
-                            <span>💬</span>
-                            <span>Texto</span>
+                            <span>WhatsApp</span>
                         </button>
 
                         {/* Botón Imprimir / PDF */}
@@ -284,7 +371,7 @@ export default function DocumentPreviewModal({
                             <button
                                 type="button"
                                 onClick={handleConvert}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer"
                             >
                                 <span>⚡</span>
                                 <span>A Venta</span>
@@ -321,14 +408,239 @@ export default function DocumentPreviewModal({
                 )}
 
                 {/* ═══════════════════════════════════════════════
-                    CUERPO DEL DOCUMENTO (HOJA MEMBRETADA A4 / CARTA)
+                    CUERPO DEL DOCUMENTO (TICKET TÉRMICO U HOJA A4)
                    ═══════════════════════════════════════════════ */}
                 <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-100 dark:bg-[#060a16] flex justify-center print:bg-white print:p-0 print:overflow-visible">
                     <div
                         id="printable-document-sheet"
-                        className="w-full max-w-[800px] bg-white text-slate-900 p-8 sm:p-12 rounded-2xl shadow-xl border border-slate-200/80 print:shadow-none print:border-none print:p-0 print:rounded-none transition-all duration-150"
-                        style={{ minHeight: '1050px' }}
+                        className={`w-full ${
+                            printFormat === 'thermal55'
+                                ? 'max-w-[320px] p-4 sm:p-5'
+                                : printFormat === 'thermal80'
+                                ? 'max-w-[400px] p-5 sm:p-6'
+                                : 'max-w-[800px] p-8 sm:p-12'
+                        } bg-white text-slate-900 rounded-2xl shadow-xl border border-slate-200/80 print:shadow-none print:border-none print:p-0 print:rounded-none transition-all duration-150`}
+                        style={{ minHeight: printFormat === 'letter' ? '1050px' : 'auto' }}
                     >
+                        {isThermal ? (
+                            /* ═══════════════════════════════════════════════
+                               FORMATO TICKET TÉRMICO (55mm / 80mm)
+                               Optimizado para impresoras térmicas y tickets
+                               ═══════════════════════════════════════════════ */
+                            <div className="font-sans text-black leading-tight text-[11px] select-text">
+                                {/* Encabezado del Ticket */}
+                                <div className="text-center pb-2 border-b-2 border-dashed border-black">
+                                    {company?.logo && (
+                                        <div className="w-12 h-12 mx-auto mb-1 overflow-hidden flex items-center justify-center">
+                                            <img
+                                                src={company.logo}
+                                                alt={companyName}
+                                                className="max-h-full max-w-full object-contain filter grayscale contrast-150"
+                                            />
+                                        </div>
+                                    )}
+                                    <h2 className="text-xs sm:text-sm font-black uppercase tracking-tight leading-tight">
+                                        {companyName}
+                                    </h2>
+                                    {companyLegal && companyLegal !== companyName && (
+                                        <p className="text-[10px] font-semibold text-neutral-800 mt-0.5">
+                                            {companyLegal}
+                                        </p>
+                                    )}
+                                    <p className="text-[10px] font-mono mt-0.5 font-bold">
+                                        NIT: {companyNit} • Bolivia
+                                    </p>
+                                    <p className="text-[10px] leading-snug mt-0.5">
+                                        {companyAddress}{companyCity ? `, ${companyCity}` : ''}
+                                    </p>
+                                    {companyPhone && (
+                                        <p className="text-[10px] font-mono mt-0.5">
+                                            Tel / WhatsApp: {companyPhone}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Identificación de Documento */}
+                                <div className="text-center py-2 border-b border-dashed border-black">
+                                    <div className="text-xs font-black uppercase tracking-wider">
+                                        {isQuotation ? 'COTIZACIÓN / PROFORMA' : 'NOTA DE VENTA'}
+                                    </div>
+                                    <div className="font-mono font-black text-sm my-0.5">
+                                        #{doc.id}
+                                    </div>
+                                    <div className="text-[10px] text-neutral-800 flex justify-between px-1 mt-1 font-mono">
+                                        <span>Fecha: <strong>{doc.date}</strong></span>
+                                        {isQuotation && (
+                                            <span>Validez: <strong>{doc.due_date || '15 días'}</strong></span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Datos del Cliente */}
+                                <div className="py-2 border-b border-dashed border-black text-[10px] space-y-0.5">
+                                    <div className="flex justify-between items-start gap-1">
+                                        <span className="font-bold shrink-0">Cliente:</span>
+                                        <span className="font-black text-right truncate">{doc.client_name}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-bold">NIT / C.I.:</span>
+                                        <span className="font-mono">{doc.client_nit || 'Sin Número / Consumidor Final'}</span>
+                                    </div>
+                                    {doc.client_phone && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="font-bold">Teléfono:</span>
+                                            <span className="font-mono">{doc.client_phone}</span>
+                                        </div>
+                                    )}
+                                    {doc.client_city && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="font-bold">Ciudad:</span>
+                                            <span>{doc.client_city}</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Detalle de Ítems / Productos */}
+                                <div className="py-2 border-b border-dashed border-black">
+                                    <div className="flex justify-between font-mono font-black text-[9px] uppercase tracking-wider pb-1 border-b border-black">
+                                        <span>CANT / DESCRIPCIÓN</span>
+                                        <span>TOTAL</span>
+                                    </div>
+                                    <div className="divide-y divide-dashed divide-neutral-300 py-1 space-y-1">
+                                        {doc.items.map((item, index) => {
+                                            const qty = Number(item.quantity) || 0;
+                                            const price = Number(item.price) || 0;
+                                            const discount = Number(item.discount) || 0;
+                                            const lineBase = qty * price;
+                                            const lineDiscount = lineBase * (discount / 100);
+                                            const lineTotal = lineBase - lineDiscount;
+
+                                            return (
+                                                <div key={item.id || index} className="pt-1 text-[10px]">
+                                                    <div className="font-bold leading-tight uppercase">
+                                                        {item.name}
+                                                    </div>
+                                                    <div className="flex justify-between items-baseline font-mono text-[9px] mt-0.5">
+                                                        <span>
+                                                            {qty} {item.unit || 'pza'} × Bs. {price.toFixed(2)}
+                                                            {discount > 0 && (
+                                                                <span className="ml-1 text-[8px] font-bold">(-{discount}%)</span>
+                                                            )}
+                                                        </span>
+                                                        <span className="font-black text-[10px]">
+                                                            Bs. {lineTotal.toFixed(2)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Totales Numéricos */}
+                                <div className="py-2 border-b border-dashed border-black space-y-1 text-[10px]">
+                                    <div className="flex justify-between">
+                                        <span>Subtotal:</span>
+                                        <span className="font-mono">Bs. {totals.subtotal.toFixed(2)}</span>
+                                    </div>
+                                    {totals.totalDiscount > 0 && (
+                                        <div className="flex justify-between">
+                                            <span>Descuento:</span>
+                                            <span className="font-mono">- Bs. {totals.totalDiscount.toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                    {withTax && (
+                                        <div className="flex justify-between">
+                                            <span>IVA (13%):</span>
+                                            <span className="font-mono">+ Bs. {totals.tax.toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                    <div className="border-y-2 border-black py-1.5 my-1 flex justify-between items-center">
+                                        <span className="font-black text-xs uppercase">TOTAL A PAGAR:</span>
+                                        <span className="font-mono font-black text-sm">
+                                            Bs. {totals.grandTotal.toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <div className="text-[8px] uppercase tracking-tight text-center leading-tight pt-0.5">
+                                        SON: {numberToBolivianosWords(totals.grandTotal)}
+                                    </div>
+                                </div>
+
+                                {/* QR de Pago Simple Bolivia */}
+                                <div className="py-2 border-b border-dashed border-black text-center">
+                                    <div className="font-black uppercase tracking-wider text-[10px] mb-1">
+                                        PAGO CON QR SIMPLE BOLIVIA
+                                    </div>
+                                    {company?.qr_payment ? (
+                                        <div className="w-32 h-32 mx-auto p-1 bg-white border border-black rounded-lg flex items-center justify-center my-1">
+                                            <img
+                                                src={company.qr_payment}
+                                                alt="QR Simple de Cobro"
+                                                className="w-full h-full object-contain filter contrast-125"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="w-24 h-24 mx-auto p-1 bg-white border border-black rounded-lg flex items-center justify-center my-1">
+                                            <svg viewBox="0 0 100 100" className="w-full h-full fill-black">
+                                                <rect x="5" y="5" width="25" height="25" rx="2" fill="#000" />
+                                                <rect x="10" y="10" width="15" height="15" fill="#fff" />
+                                                <rect x="13" y="13" width="9" height="9" fill="#000" />
+
+                                                <rect x="70" y="5" width="25" height="25" rx="2" fill="#000" />
+                                                <rect x="75" y="10" width="15" height="15" fill="#fff" />
+                                                <rect x="78" y="13" width="9" height="9" fill="#000" />
+
+                                                <rect x="5" y="70" width="25" height="25" rx="2" fill="#000" />
+                                                <rect x="10" y="75" width="15" height="15" fill="#fff" />
+                                                <rect x="13" y="78" width="9" height="9" fill="#000" />
+
+                                                <rect x="35" y="10" width="8" height="8" fill="#000" />
+                                                <rect x="50" y="10" width="12" height="6" fill="#000" />
+                                                <rect x="40" y="25" width="20" height="8" fill="#000" />
+                                                <rect x="10" y="40" width="8" height="20" fill="#000" />
+                                                <rect x="25" y="45" width="15" height="15" fill="#000" />
+                                                <rect x="48" y="40" width="10" height="10" fill="#000" />
+                                                <rect x="65" y="40" width="8" height="18" fill="#000" />
+                                                <rect x="80" y="45" width="12" height="12" fill="#000" />
+                                                <rect x="38" y="65" width="22" height="8" fill="#000" />
+                                                <rect x="45" y="80" width="15" height="12" fill="#000" />
+                                                <rect x="70" y="70" width="22" height="22" fill="#000" />
+                                                <rect x="75" y="75" width="12" height="12" fill="#fff" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                    <p className="text-[8px] text-neutral-800 leading-tight">
+                                        Escanea desde cualquier app bancaria de Bolivia (QR Simple)
+                                    </p>
+                                    {company?.bank_account_info && (
+                                        <p className="text-[8px] font-semibold mt-1 p-1 bg-neutral-100 border border-neutral-300 rounded whitespace-pre-line leading-tight">
+                                            {company.bank_account_info}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Pie del Ticket Térmico */}
+                                <div className="pt-2 text-[9px] text-center space-y-1">
+                                    <p><strong>Pago:</strong> {doc.payment_terms || 'Contado / QR'}</p>
+                                    <p><strong>Entrega:</strong> {doc.delivery_time || 'Inmediata'}</p>
+                                    {doc.notes && (
+                                        <p className="italic text-[8px] text-neutral-700 bg-neutral-100 p-1 rounded">
+                                            {doc.notes}
+                                        </p>
+                                    )}
+                                    <div className="pt-2 border-t border-black font-black uppercase text-[10px] tracking-wide">
+                                        ¡GRACIAS POR SU PREFERENCIA!
+                                    </div>
+                                    <div className="text-[7px] text-neutral-500 font-mono">
+                                        LDR Comercial • Bolivia • {new Date().getFullYear()}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            /* ═══════════════════════════════════════════════
+                               FORMATO HOJA MEMBRETADA (A4 / CARTA)
+                               ═══════════════════════════════════════════════ */
+                            <>
                         {/* ENCABEZADO: DATOS DE LA EMPRESA & FOLIO */}
                         <div className="flex flex-col sm:flex-row justify-between items-start gap-6 pb-6 border-b-2 border-slate-900">
                             <div className="flex items-start gap-4">
@@ -615,6 +927,8 @@ export default function DocumentPreviewModal({
                                 Documento emitido por la plataforma LDR Comercial • Bolivia • {new Date().getFullYear()}
                             </div>
                         </div>
+                        </>
+                        )}
                     </div>
                 </div>
 
