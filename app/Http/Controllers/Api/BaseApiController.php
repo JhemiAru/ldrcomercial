@@ -41,18 +41,29 @@ class BaseApiController extends Controller
             return null;
         }
 
+        // Si ya es una URL completa
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            // Asegurar HTTPS para evitar problemas de Cleartext Traffic en Android
+            if (str_starts_with($path, 'http://ldrcomercial.com')) {
+                return str_replace('http://', 'https://', $path);
+            }
             return $path;
         }
 
-        if (str_starts_with($path, '/storage/')) {
-            return url($path);
+        $cleanPath = ltrim($path, '/');
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $cleanPath = substr($cleanPath, 8);
         }
 
-        if (str_starts_with($path, 'storage/')) {
-            return url('/' . $path);
+        // Usar dominio canónico HTTPS de producción
+        $baseUrl = rtrim(config('app.url', 'https://ldrcomercial.com'), '/');
+        if (str_contains($baseUrl, 'localhost') || empty($baseUrl)) {
+            $baseUrl = 'https://ldrcomercial.com';
+        }
+        if (str_starts_with($baseUrl, 'http://')) {
+            $baseUrl = str_replace('http://', 'https://', $baseUrl);
         }
 
-        return url('/storage/' . ltrim($path, '/'));
+        return $baseUrl . '/storage/' . $cleanPath;
     }
 }
