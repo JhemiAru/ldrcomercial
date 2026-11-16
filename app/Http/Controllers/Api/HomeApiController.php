@@ -18,21 +18,54 @@ class HomeApiController extends BaseApiController
     public function index(Request $request): JsonResponse
     {
         // 1. Banners principales
-        $banners = HomeBanner::active()->ordered()->get()->map(function ($b) {
-            $imageUrl = self::formatImageUrl($b->image);
-            return [
-                'id' => $b->id,
-                'title' => $b->title,
-                'subtitle' => $b->subtitle,
-                'image_url' => $imageUrl,
-                'link' => $b->link,
-                'order' => $b->order,
-                // Alias compatibles con la app Android
-                'nombre' => $b->title,
-                'imagen' => $imageUrl,
-                'redireccion' => $b->link ?: '',
-            ];
-        });
+        $bannersCollection = HomeBanner::active()->ordered()->get();
+
+        if ($bannersCollection->isEmpty()) {
+            // Fallback a empresas verificadas con banner o fotos
+            $banners = Company::where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereNotNull('banner')
+                        ->orWhereNotNull('carousel_banners')
+                        ->orWhereNotNull('logo');
+                })
+                ->take(5)
+                ->get()
+                ->map(function ($c, $index) {
+                    $img = $c->banner ?: (is_array($c->carousel_banners) && !empty($c->carousel_banners) ? $c->carousel_banners[0] : $c->logo);
+                    $imageUrl = self::formatImageUrl($img);
+                    return [
+                        'id' => $c->id,
+                        'title' => $c->name,
+                        'subtitle' => $c->slogan ?: $c->description,
+                        'image_url' => $imageUrl,
+                        'link' => $c->slug,
+                        'order' => $index,
+                        'nombre' => $c->name,
+                        'imagen' => $imageUrl,
+                        'redireccion' => $c->slug,
+                    ];
+                })
+                ->filter(function ($b) {
+                    return !empty($b['imagen']);
+                })
+                ->values();
+        } else {
+            $banners = $bannersCollection->map(function ($b) {
+                $imageUrl = self::formatImageUrl($b->image);
+                return [
+                    'id' => $b->id,
+                    'title' => $b->title,
+                    'subtitle' => $b->subtitle,
+                    'image_url' => $imageUrl,
+                    'link' => $b->link,
+                    'order' => $b->order,
+                    // Alias compatibles con la app Android
+                    'nombre' => $b->title,
+                    'imagen' => $imageUrl,
+                    'redireccion' => $b->link ?: '',
+                ];
+            });
+        }
 
         // 2. Categorías activas
         $categories = Category::where('is_active', true)
