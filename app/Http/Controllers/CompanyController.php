@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Models\Category;
 use Illuminate\Support\Str;
 use App\Services\ImageOptimizer;
+use App\Services\GeoLocationHelper;
 
 class CompanyController extends Controller
 {
@@ -35,6 +36,8 @@ class CompanyController extends Controller
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'department' => 'nullable|string|max:100',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'google_maps_link' => 'nullable|string|max:500',
             'phone' => 'nullable|string|max:50',
             'whatsapp' => 'nullable|string|max:50',
@@ -106,6 +109,18 @@ class CompanyController extends Controller
             $validated['qr_payment'] = null;
         } else {
             unset($validated['qr_payment']);
+        }
+
+        // Autocompletar coordenadas GPS si se proveyó enlace de Google Maps y las coordenadas están vacías
+        if ((empty($validated['latitude']) || empty($validated['longitude'])) && !empty($validated['google_maps_link'])) {
+            $coords = GeoLocationHelper::extractCoordinates($validated['google_maps_link']);
+            if ($coords) {
+                $validated['latitude'] = $coords['latitude'];
+                $validated['longitude'] = $coords['longitude'];
+            }
+        } elseif (!empty($validated['latitude']) && !empty($validated['longitude']) && empty($validated['google_maps_link'])) {
+            // Generar enlace directo de Google Maps si se fijaron coordenadas en el mapa pero no se pegó URL
+            $validated['google_maps_link'] = "https://www.google.com/maps?q={$validated['latitude']},{$validated['longitude']}";
         }
 
         if (!$company) {

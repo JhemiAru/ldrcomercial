@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from '@inertiajs/react';
+import LocationPicker from '@/Components/LocationPicker';
 
 export default function EditCompanyModal({
     isOpen,
@@ -32,6 +33,8 @@ export default function EditCompanyModal({
         city: company.city || 'Santa Cruz',
         department: company.department || '',
         address: company.address || '',
+        latitude: company.latitude ?? '',
+        longitude: company.longitude ?? '',
         google_maps_link: company.google_maps_link || '',
         phone: company.phone || '',
         whatsapp: company.whatsapp || '',
@@ -66,6 +69,8 @@ export default function EditCompanyModal({
                 city: company.city || 'Santa Cruz',
                 department: company.department || '',
                 address: company.address || '',
+                latitude: company.latitude ?? '',
+                longitude: company.longitude ?? '',
                 google_maps_link: company.google_maps_link || '',
                 phone: company.phone || '',
                 whatsapp: company.whatsapp || '',
@@ -516,18 +521,19 @@ export default function EditCompanyModal({
                             {errors.address && <p className="text-[11px] text-red-500 mt-1 font-semibold">{errors.address}</p>}
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                Enlace de Google Maps (URL Directa)
-                            </label>
-                            <input
-                                type="url"
-                                value={data.google_maps_link}
-                                onChange={(e) => setData('google_maps_link', e.target.value)}
-                                placeholder="Ej. https://maps.app.goo.gl/... o https://goo.gl/maps/..."
-                                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        <div className="sm:col-span-2">
+                            <LocationPicker
+                                googleMapsLink={data.google_maps_link}
+                                latitude={data.latitude}
+                                longitude={data.longitude}
+                                city={data.city}
+                                onChange={(updates) => {
+                                    Object.entries(updates).forEach(([key, val]) => {
+                                        setData(key, val);
+                                    });
+                                }}
+                                errors={errors}
                             />
-                            {errors.google_maps_link && <p className="text-[11px] text-red-500 mt-1 font-semibold">{errors.google_maps_link}</p>}
                         </div>
                     </div>
 

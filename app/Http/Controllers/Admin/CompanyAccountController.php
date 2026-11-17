@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use App\Services\ImageOptimizer;
+use App\Services\GeoLocationHelper;
 
 class CompanyAccountController extends Controller
 {
@@ -133,12 +134,25 @@ class CompanyAccountController extends Controller
             'tax_id' => ['nullable', 'string', 'max:50'],
             'city' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string', 'max:255'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'google_maps_link' => ['nullable', 'string', 'max:500'],
         ], [
             'email.unique' => 'Ya existe un usuario con este correo electrónico.',
             'company_name.required' => 'El nombre de la empresa es obligatorio.',
             'category_id.required' => 'Debes seleccionar una categoría.',
         ]);
+
+        // Autocompletar coordenadas GPS si se proveyó enlace de Google Maps y las coordenadas están vacías
+        if ((empty($validated['latitude']) || empty($validated['longitude'])) && !empty($validated['google_maps_link'])) {
+            $coords = GeoLocationHelper::extractCoordinates($validated['google_maps_link']);
+            if ($coords) {
+                $validated['latitude'] = $coords['latitude'];
+                $validated['longitude'] = $coords['longitude'];
+            }
+        } elseif (!empty($validated['latitude']) && !empty($validated['longitude']) && empty($validated['google_maps_link'])) {
+            $validated['google_maps_link'] = "https://www.google.com/maps?q={$validated['latitude']},{$validated['longitude']}";
+        }
 
         $user = User::create([
             'name' => $validated['name'],
@@ -156,6 +170,8 @@ class CompanyAccountController extends Controller
             'tax_id' => $validated['tax_id'] ?? null,
             'city' => $validated['city'] ?? 'Bolivia',
             'address' => $validated['address'] ?? null,
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
             'google_maps_link' => $validated['google_maps_link'] ?? null,
             'phone' => $validated['phone'] ?? null,
             'whatsapp' => $validated['phone'] ?? null,
@@ -186,6 +202,8 @@ class CompanyAccountController extends Controller
             'city' => ['nullable', 'string', 'max:100'],
             'department' => ['nullable', 'string', 'max:100'],
             'address' => ['nullable', 'string', 'max:255'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'google_maps_link' => ['nullable', 'string', 'max:500'],
             'phone' => ['nullable', 'string', 'max:50'],
             'whatsapp' => ['nullable', 'string', 'max:50'],
@@ -244,6 +262,17 @@ class CompanyAccountController extends Controller
             } else {
                 unset($validated[$bannerField]);
             }
+        }
+
+        // Autocompletar coordenadas GPS si se proveyó enlace de Google Maps y las coordenadas están vacías
+        if ((empty($validated['latitude']) || empty($validated['longitude'])) && !empty($validated['google_maps_link'])) {
+            $coords = GeoLocationHelper::extractCoordinates($validated['google_maps_link']);
+            if ($coords) {
+                $validated['latitude'] = $coords['latitude'];
+                $validated['longitude'] = $coords['longitude'];
+            }
+        } elseif (!empty($validated['latitude']) && !empty($validated['longitude']) && empty($validated['google_maps_link'])) {
+            $validated['google_maps_link'] = "https://www.google.com/maps?q={$validated['latitude']},{$validated['longitude']}";
         }
 
         $company->update($validated);

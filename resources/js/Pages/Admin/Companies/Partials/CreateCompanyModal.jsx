@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
+import LocationPicker from '@/Components/LocationPicker';
 
 export default function CreateCompanyModal({
     isOpen,
@@ -21,6 +22,9 @@ export default function CreateCompanyModal({
         tax_id: '',
         city: 'La Paz',
         address: '',
+        latitude: '',
+        longitude: '',
+        google_maps_link: '',
     });
 
     const generateSecurePassword = () => {
@@ -201,6 +205,21 @@ export default function CreateCompanyModal({
                                     onChange={(e) => setData('address', e.target.value)}
                                     placeholder="Av. Principal #123, Zona Industrial"
                                     className="w-full bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
+                                />
+                            </div>
+
+                            <div className="sm:col-span-2 pt-2">
+                                <LocationPicker
+                                    googleMapsLink={data.google_maps_link}
+                                    latitude={data.latitude}
+                                    longitude={data.longitude}
+                                    city={data.city}
+                                    onChange={(updates) => {
+                                        Object.entries(updates).forEach(([key, val]) => {
+                                            setData(key, val);
+                                        });
+                                    }}
+                                    errors={errors}
                                 />
                             </div>
                         </div>
