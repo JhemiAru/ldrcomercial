@@ -170,6 +170,7 @@ class ProductApiController extends BaseApiController
             'marca' => $p->brand ? $p->brand->name : '',
             'categoria' => $p->category_id,
             'categoriapri' => $p->category ? $p->category->slug : '',
+            'telefono' => $p->company ? ($p->company->whatsapp ?: $p->company->phone) : '',
         ];
     }
 }

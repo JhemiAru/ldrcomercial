@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
@@ -65,6 +65,70 @@ export default function CreateProduct({ categories = [], brands = [], company })
     const [imagePreview, setImagePreview] = useState(null);
     const fileInputRef = useRef(null);
 
+    // Protección contra pérdida de datos (Borrador automático en localStorage)
+    const DRAFT_KEY = 'ldr_product_create_draft';
+    const [draftRestored, setDraftRestored] = useState(false);
+    const [clientError, setClientError] = useState(null);
+
+    // 1. Restaurar borrador previo si el usuario recargó o cambió de pestaña
+    useEffect(() => {
+        try {
+            const savedDraft = localStorage.getItem(DRAFT_KEY);
+            if (savedDraft) {
+                const parsed = JSON.parse(savedDraft);
+                if (parsed && typeof parsed === 'object') {
+                    let hasAnyData = false;
+                    Object.entries(parsed).forEach(([key, val]) => {
+                        if (key !== 'main_image' && val !== undefined && val !== null && val !== '') {
+                            setData(key, val);
+                            hasAnyData = true;
+                        }
+                    });
+
+                    if (parsed.unit && !STANDARD_UNITS.some((u) => u.value === parsed.unit)) {
+                        setIsCustomUnit(true);
+                    }
+
+                    if (parsed.main_image && typeof parsed.main_image === 'string' && parsed.main_image.startsWith('http')) {
+                        setImageInputMode('url');
+                        setData('main_image', parsed.main_image);
+                        setImagePreview(parsed.main_image);
+                    }
+
+                    if (hasAnyData) {
+                        setDraftRestored(true);
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('No se pudo restaurar el borrador previo:', e);
+        }
+    }, []);
+
+    // 2. Guardar automáticamente cada cambio que escribe el usuario
+    useEffect(() => {
+        try {
+            const draftData = { ...data };
+            if (draftData.main_image instanceof File) {
+                delete draftData.main_image;
+            }
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+        } catch (e) {}
+    }, [
+        data.name, data.category_id, data.brand_id, data.new_brand_name,
+        data.sku, data.tags, data.short_description, data.description,
+        data.price, data.original_price, data.wholesale_price,
+        data.min_wholesale_qty, data.unit, data.weight, data.stock_quantity, data.in_stock
+    ]);
+
+    const descartarBorrador = () => {
+        try {
+            localStorage.removeItem(DRAFT_KEY);
+            setDraftRestored(false);
+            window.location.reload();
+        } catch (e) {}
+    };
+
     const handleFileChange = (e) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -86,9 +150,45 @@ export default function CreateProduct({ categories = [], brands = [], company })
 
     const submit = (e) => {
         e.preventDefault();
+        setClientError(null);
+
+        // Validación previa con feedback inmediato y auto-focus
+        if (!data.name || !data.name.trim()) {
+            setClientError('Por favor escribe el Nombre del Producto.');
+            const el = document.getElementById('name');
+            if (el) el.focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
+        if (!data.category_id) {
+            setClientError('Por favor selecciona una Categoría Comercial.');
+            const el = document.getElementById('category_id');
+            if (el) el.focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
+        if (data.price === '' || isNaN(data.price) || parseFloat(data.price) < 0) {
+            setClientError('Por favor ingresa un Precio válido para el producto (número mayor o igual a 0).');
+            const el = document.getElementById('price');
+            if (el) el.focus();
+            window.scrollTo({ top: 380, behavior: 'smooth' });
+            return;
+        }
+
         post(route('products.store'), {
             forceFormData: true,
             preserveScroll: true,
+            onSuccess: () => {
+                try {
+                    localStorage.removeItem(DRAFT_KEY);
+                } catch (e) {}
+            },
+            onError: (errs) => {
+                console.error('Error al guardar producto:', errs);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
         });
     };
 
@@ -130,6 +230,40 @@ export default function CreateProduct({ categories = [], brands = [], company })
 
             <div className="py-6 max-w-5xl mx-auto space-y-6">
                 
+                {/* Banner de Borrador Restaurado */}
+                {draftRestored && (
+                    <div className="p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 rounded-2xl text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                        <div className="flex items-center gap-2">
+                            <span className="text-base">💾</span>
+                            <span>Se restauraron los datos que estabas completando previamente para que no pierdas información al cambiar de pestaña.</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={descartarBorrador}
+                            className="text-xs font-bold text-amber-700 dark:text-amber-400 underline hover:text-amber-900 cursor-pointer self-end sm:self-auto"
+                        >
+                            ✕ Empezar formulario limpio
+                        </button>
+                    </div>
+                )}
+
+                {/* Alerta de Error de Validación en Cliente */}
+                {clientError && (
+                    <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-800 dark:text-red-300 rounded-2xl text-xs sm:text-sm flex items-center justify-between gap-3 shadow-xs animate-shake">
+                        <div className="flex items-center gap-2 font-bold">
+                            <span>⚠️</span>
+                            <span>{clientError}</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setClientError(null)}
+                            className="text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
+
                 {/* Alerta de Errores Generales */}
                 {hasErrors && (
                     <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-800 dark:text-red-300 rounded-2xl text-xs sm:text-sm shadow-xs">
@@ -144,7 +278,7 @@ export default function CreateProduct({ categories = [], brands = [], company })
                     </div>
                 )}
 
-                <form onSubmit={submit} className="space-y-6">
+                <form noValidate onSubmit={submit} className="space-y-6">
                     
                     {/* ═══════════════════════════════════════════════
                         SECCIÓN 1: DETALLES BÁSICOS DEL PRODUCTO
@@ -697,8 +831,8 @@ export default function CreateProduct({ categories = [], brands = [], company })
                         </div>
                     </div>
 
-                    {/* BOTÓN FLOTANTE / INFERIOR DE PUBLICACIÓN */}
-                    <div className="sticky bottom-4 z-20 bg-white/90 dark:bg-[#0b132b]/95 backdrop-blur-md p-4 rounded-3xl border border-slate-200 dark:border-white/15 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    {/* BOTÓN AL FINAL DEL FORMULARIO (NO FLOTANTE PARA NO BLOQUEAR CAMPOS NI EL TECLADO) */}
+                    <div className="mt-8 bg-white dark:bg-[#0b132b] p-6 rounded-2xl border border-slate-200 dark:border-white/10 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
                             💡 Al publicar, tu producto aparecerá automáticamente en tu perfil de empresa y en el catálogo general.
                         </div>

@@ -97,11 +97,43 @@ export default function EditProduct({ product, categories = [], brands = [] }) {
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
+    const [clientError, setClientError] = useState(null);
+
     const submit = (e) => {
         e.preventDefault();
+        setClientError(null);
+
+        if (!data.name || !data.name.trim()) {
+            setClientError('Por favor escribe el Nombre del Producto.');
+            const el = document.getElementById('name');
+            if (el) el.focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
+        if (!data.category_id) {
+            setClientError('Por favor selecciona una Categoría Comercial.');
+            const el = document.getElementById('category_id');
+            if (el) el.focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
+        if (data.price === '' || isNaN(data.price) || parseFloat(data.price) < 0) {
+            setClientError('Por favor ingresa un Precio válido para el producto (número mayor o igual a 0).');
+            const el = document.getElementById('price');
+            if (el) el.focus();
+            window.scrollTo({ top: 380, behavior: 'smooth' });
+            return;
+        }
+
         post(route('products.update', product.id), {
             forceFormData: true,
             preserveScroll: true,
+            onError: (errs) => {
+                console.error('Error al actualizar producto:', errs);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
         });
     };
 
@@ -143,6 +175,23 @@ export default function EditProduct({ product, categories = [], brands = [] }) {
 
             <div className="py-6 max-w-5xl mx-auto space-y-6">
                 
+                {/* Alerta de Error de Validación en Cliente */}
+                {clientError && (
+                    <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-800 dark:text-red-300 rounded-2xl text-xs sm:text-sm flex items-center justify-between gap-3 shadow-xs animate-shake">
+                        <div className="flex items-center gap-2 font-bold">
+                            <span>⚠️</span>
+                            <span>{clientError}</span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setClientError(null)}
+                            className="text-xs font-bold text-red-600 hover:text-red-800 cursor-pointer"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
+
                 {/* Alerta de Errores Generales */}
                 {hasErrors && (
                     <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-800 dark:text-red-300 rounded-2xl text-xs sm:text-sm shadow-xs">
@@ -157,7 +206,7 @@ export default function EditProduct({ product, categories = [], brands = [] }) {
                     </div>
                 )}
 
-                <form onSubmit={submit} className="space-y-6">
+                <form noValidate onSubmit={submit} className="space-y-6">
                     
                     {/* ═══════════════════════════════════════════════
                         SECCIÓN 1: DETALLES BÁSICOS DEL PRODUCTO
@@ -695,8 +744,8 @@ export default function EditProduct({ product, categories = [], brands = [] }) {
                         </div>
                     </div>
 
-                    {/* BOTÓN FLOTANTE / INFERIOR DE GUARDADO */}
-                    <div className="sticky bottom-4 z-20 bg-white/90 dark:bg-[#0b132b]/95 backdrop-blur-md p-4 rounded-3xl border border-slate-200 dark:border-white/15 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    {/* BOTÓN AL FINAL DEL FORMULARIO (NO FLOTANTE PARA NO BLOQUEAR CAMPOS NI EL TECLADO) */}
+                    <div className="mt-8 bg-white dark:bg-[#0b132b] p-6 rounded-2xl border border-slate-200 dark:border-white/10 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
                             💡 Los cambios se actualizarán al instante en tu catálogo comercial.
                         </div>

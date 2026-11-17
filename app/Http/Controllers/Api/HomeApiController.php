@@ -9,6 +9,7 @@ use App\Models\HomeBanner;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class HomeApiController extends BaseApiController
 {
@@ -16,6 +17,19 @@ class HomeApiController extends BaseApiController
      * Datos completos para la pantalla de inicio de la aplicación móvil.
      */
     public function index(Request $request): JsonResponse
+    {
+        if ($request->boolean('refresh')) {
+            Cache::forget('api_v1_home_feed');
+        }
+
+        $data = Cache::remember('api_v1_home_feed', 60, function () {
+            return $this->buildHomeFeed();
+        });
+
+        return $this->successResponse($data, 'Datos de inicio cargados exitosamente');
+    }
+
+    private function buildHomeFeed(): array
     {
         // 1. Banners principales
         $bannersCollection = HomeBanner::active()->ordered()->get();
@@ -164,7 +178,7 @@ class HomeApiController extends BaseApiController
             ];
         }
 
-        return $this->successResponse([
+        return [
             'banners' => $banners,
             'categories' => $categories,
             'featured_products' => $featuredProducts,
@@ -173,7 +187,7 @@ class HomeApiController extends BaseApiController
             'companies' => $companies,
             'events' => $events,
             'sections' => $sections,
-        ], 'Datos de inicio cargados exitosamente');
+        ];
     }
 
     private function formatProduct(Product $p): array
@@ -219,6 +233,7 @@ class HomeApiController extends BaseApiController
             'marca' => $p->brand ? $p->brand->name : '',
             'categoria' => $p->category_id,
             'categoriapri' => $p->category ? $p->category->slug : '',
+            'telefono' => $p->company ? ($p->company->whatsapp ?: $p->company->phone) : '',
         ];
     }
 

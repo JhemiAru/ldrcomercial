@@ -109,6 +109,7 @@ class CompanyApiController extends BaseApiController
                 'imagen' => $imageUrl ?: '',
                 'empresa' => $company->name,
                 'redireccion' => $company->slug,
+                'telefono' => $company->whatsapp ?: $company->phone,
             ];
         });
 
