@@ -110,6 +110,15 @@ class CompanyApiController extends BaseApiController
                 'empresa' => $company->name,
                 'redireccion' => $company->slug,
                 'telefono' => $company->whatsapp ?: $company->phone,
+                'descripcion' => $p->description ?: $p->short_description ?: '',
+                'short_description' => $p->short_description ?: '',
+                'sku' => $p->sku ?: '',
+                'marca' => $p->brand ? $p->brand->name : '',
+                'unidad' => $p->unit ?: 'unidad',
+                'precio_mayor' => $p->wholesale_price ? (float) $p->wholesale_price : null,
+                'min_wholesale_qty' => $p->min_wholesale_qty ?: null,
+                'in_stock' => (bool) $p->in_stock,
+                'stock_quantity' => $p->stock_quantity,
             ];
         });
 

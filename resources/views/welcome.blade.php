@@ -54,104 +54,217 @@
 
 
     <!-- ========================================================================= -->
-    <!-- 2. HERO BANNER CAROUSEL (Solo Banners / Imágenes Clickeables sin Texto) -->
+    <!-- 2. HERO PRINCIPAL: BANNER INTERACTIVO (IZQ) + 3 PRODUCTOS DESTACADOS (DER) -->
     <!-- ========================================================================= -->
-    <section 
-        id="hero-carousel-section"
-        class="relative w-full overflow-hidden bg-slate-900 select-none group"
-        aria-label="Banners Principales"
-    >
-        <!-- Contenedor con altura proporcional para banners limpios -->
-        <div class="relative w-full h-[240px] sm:h-[360px] md:h-[460px] lg:h-[540px] xl:h-[600px] overflow-hidden">
-            @if(isset($banners) && count($banners) > 0)
-                @foreach($banners as $index => $banner)
-                    <a 
-                        href="{{ $banner->link ?: '#' }}"
-                        class="hero-slide absolute inset-0 block w-full h-full transition-opacity duration-700 ease-in-out {{ $index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none' }} cursor-pointer"
-                        data-index="{{ $index }}"
-                        title="{{ $banner->title }}"
+    @php
+        $sideProducts = collect();
+        if (isset($featuredProducts) && $featuredProducts->count() > 0) {
+            $sideProducts = $sideProducts->merge($featuredProducts->take(3));
+        }
+        if ($sideProducts->count() < 3 && isset($promotionalProducts)) {
+            $needed = 3 - $sideProducts->count();
+            $sideProducts = $sideProducts->merge($promotionalProducts->take($needed));
+        }
+        if ($sideProducts->count() < 3 && isset($categoriesWithProducts)) {
+            foreach ($categoriesWithProducts as $cat) {
+                foreach ($cat->products as $p) {
+                    if (!$sideProducts->contains('id', $p->id)) {
+                        $sideProducts->push($p);
+                        if ($sideProducts->count() >= 3) break 2;
+                    }
+                }
+            }
+        }
+    @endphp
+
+    <section class="py-4 sm:py-6 bg-slate-100/90 dark:bg-[#070d1a] border-b border-slate-200/80 dark:border-white/10 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <!-- CONTENEDOR FLEX: BANNER (IZQUIERDA ~74%) + 3 PRODUCTOS (DERECHA ~26%) -->
+            <div class="flex flex-col lg:flex-row gap-4 lg:gap-5 items-stretch">
+                
+                <!-- COLUMNA IZQUIERDA: BANNER PRINCIPAL (SLIDER) -->
+                <div class="w-full lg:w-[73%] xl:w-[75%] flex flex-col">
+                    <div 
+                        id="hero-carousel-section"
+                        class="relative w-full h-[240px] sm:h-[340px] md:h-[400px] lg:h-[450px] rounded-2xl overflow-hidden bg-slate-900 select-none group shadow-md border border-slate-200/80 dark:border-white/10"
+                        aria-label="Banners Principales"
                     >
-                        <img 
-                            src="{{ str_starts_with($banner->image, 'http') ? $banner->image : asset($banner->image) }}" 
-                            alt="{{ $banner->title }}"
-                            class="w-full h-full object-cover object-center"
-                            loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
+                        <!-- Slides de Banners -->
+                        <div class="relative w-full h-full overflow-hidden">
+                            @if(isset($banners) && count($banners) > 0)
+                                @foreach($banners as $index => $banner)
+                                    <a 
+                                        href="{{ $banner->link ?: '#' }}"
+                                        class="hero-slide absolute inset-0 block w-full h-full transition-opacity duration-700 ease-in-out {{ $index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none' }} cursor-pointer"
+                                        data-index="{{ $index }}"
+                                        title="{{ $banner->title }}"
+                                    >
+                                        <img 
+                                            src="{{ str_starts_with($banner->image, 'http') ? $banner->image : asset($banner->image) }}" 
+                                            alt="{{ $banner->title }}"
+                                            class="w-full h-full object-cover object-center"
+                                            loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
+                                        >
+                                    </a>
+                                @endforeach
+                            @else
+                                <div class="hero-slide absolute inset-0 block w-full h-full bg-slate-900 opacity-100 z-10 flex items-center justify-center text-white">
+                                    <p class="text-sm font-bold">LDR Comercial Bolivia - Proveedor Industrial</p>
+                                </div>
+                            @endif
+                        </div>
+
+                        @if(isset($banners) && count($banners) > 1)
+                        <!-- Flechas de Navegación Flotantes -->
+                        <button
+                            type="button"
+                            id="hero-prev-btn"
+                            class="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg hover:scale-105 opacity-80 group-hover:opacity-100 focus:outline-none cursor-pointer"
+                            aria-label="Banner anterior"
+                            title="Banner anterior"
                         >
-                    </a>
-                @endforeach
-            @else
-                <div class="hero-slide absolute inset-0 block w-full h-full bg-slate-900 opacity-100 z-10 flex items-center justify-center text-white">
-                    <p class="text-sm font-bold">LDR Comercial Bolivia - Proveedor Industrial</p>
-                </div>
-            @endif
-        </div>
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
 
-        @if(isset($banners) && count($banners) > 1)
-        <!-- Flechas de Navegación Flotantes (Izquierda y Derecha) -->
-        <button
-            type="button"
-            id="hero-prev-btn"
-            class="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg hover:scale-105 opacity-80 group-hover:opacity-100 focus:outline-none cursor-pointer"
-            aria-label="Banner anterior"
-            title="Banner anterior"
-        >
-            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-        </button>
+                        <button
+                            type="button"
+                            id="hero-next-btn"
+                            class="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg hover:scale-105 opacity-80 group-hover:opacity-100 focus:outline-none cursor-pointer"
+                            aria-label="Banner siguiente"
+                            title="Banner siguiente"
+                        >
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
 
-        <button
-            type="button"
-            id="hero-next-btn"
-            class="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg hover:scale-105 opacity-80 group-hover:opacity-100 focus:outline-none cursor-pointer"
-            aria-label="Banner siguiente"
-            title="Banner siguiente"
-        >
-            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-        </button>
-
-        <!-- Barra Inferior: Indicadores de Puntos -->
-        <div class="absolute bottom-3 sm:bottom-5 left-0 right-0 z-30 flex items-center justify-center gap-2" id="hero-dots-container">
-            @foreach($banners as $index => $banner)
-                <button type="button" class="hero-dot transition-all duration-300 rounded-full focus:outline-none {{ $index === 0 ? 'w-8 sm:w-10 h-2 sm:h-2.5 bg-blue-500 shadow-sm shadow-blue-400' : 'w-2 sm:w-2.5 h-2 sm:h-2.5 bg-white/60 hover:bg-white shadow-xs' }} cursor-pointer" data-index="{{ $index }}" aria-label="Banner {{ $index + 1 }}"></button>
-            @endforeach
-        </div>
-        @endif
-
-        <!-- Barra de Estadísticas y Confianza -->
-        <div class="relative z-20 border-t border-white/10 bg-slate-950/80 backdrop-blur-md py-3 sm:py-4">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 sm:grid-cols-4 gap-4 text-slate-300 text-center sm:text-left">
-                <div class="flex items-center gap-3 justify-center sm:justify-start">
-                    <span class="text-xl sm:text-2xl">🏢</span>
-                    <div>
-                        <div class="text-sm sm:text-base font-black text-white leading-tight">500+</div>
-                        <div class="text-[11px] text-slate-400">Empresas Verificadas</div>
+                        <!-- Puntos de Navegación -->
+                        <div class="absolute bottom-3 sm:bottom-4 left-0 right-0 z-30 flex items-center justify-center gap-2" id="hero-dots-container">
+                            @foreach($banners as $index => $banner)
+                                <button type="button" class="hero-dot transition-all duration-300 rounded-full focus:outline-none {{ $index === 0 ? 'w-7 sm:w-9 h-2 bg-blue-500 shadow-sm shadow-blue-400' : 'w-2 h-2 bg-white/60 hover:bg-white shadow-xs' }} cursor-pointer" data-index="{{ $index }}" aria-label="Banner {{ $index + 1 }}"></button>
+                            @endforeach
+                        </div>
+                        @endif
                     </div>
                 </div>
-                <div class="flex items-center gap-3 justify-center sm:justify-start">
-                    <span class="text-xl sm:text-2xl">💎</span>
-                    <div>
-                        <div class="text-sm sm:text-base font-black text-white leading-tight">100%</div>
-                        <div class="text-[11px] text-slate-400">Precios Transparentes</div>
-                    </div>
+
+                <!-- COLUMNA DERECHA: 3 PRODUCTOS / OFERTAS DESTACADAS -->
+                <div class="w-full lg:w-[27%] xl:w-[25%] flex flex-col sm:grid sm:grid-cols-3 lg:flex lg:flex-col gap-3 justify-between">
+                    @forelse($sideProducts as $product)
+                        <a 
+                            href="{{ route('products.show', $product->id) }}"
+                            class="group relative flex-1 min-h-[125px] sm:min-h-[135px] lg:min-h-0 rounded-2xl overflow-hidden border border-slate-200/90 dark:border-white/10 bg-slate-900 shadow-sm hover:shadow-xl hover:border-blue-500/60 transition-all duration-300 flex flex-col justify-end cursor-pointer"
+                            title="Ver {{ $product->name }}"
+                        >
+                            <!-- Imagen de Fondo del Producto -->
+                            <div class="absolute inset-0 bg-slate-950">
+                                @if($product->main_image)
+                                    <img 
+                                        src="{{ str_starts_with($product->main_image, 'http') ? $product->main_image : asset($product->main_image) }}" 
+                                        alt="{{ $product->name }}" 
+                                        class="w-full h-full object-cover object-center opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                                        loading="lazy"
+                                    >
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 text-3xl">
+                                        📦
+                                    </div>
+                                @endif
+                                <!-- Gradiente oscuro para máxima legibilidad -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 to-transparent"></div>
+                            </div>
+
+                            <!-- Badge Flotante Superior -->
+                            <div class="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5">
+                                @if($product->original_price && $product->original_price > $product->price)
+                                    @php
+                                        $descPct = round((($product->original_price - $product->price) / $product->original_price) * 100);
+                                    @endphp
+                                    <span class="px-2 py-0.5 rounded-md bg-red-600 text-white text-[10px] font-black tracking-wider uppercase shadow-xs">
+                                        -{{ $descPct }}%
+                                    </span>
+                                @else
+                                    <span class="px-2 py-0.5 rounded-md bg-blue-600/90 backdrop-blur-xs text-white text-[10px] font-bold tracking-wider uppercase shadow-xs">
+                                        Destacado
+                                    </span>
+                                @endif
+                            </div>
+
+                            <!-- Información Inferior del Producto -->
+                            <div class="relative z-10 p-3 sm:p-3.5 flex flex-col">
+                                <span class="text-[10px] font-semibold text-blue-300 dark:text-blue-400 uppercase tracking-wider truncate mb-0.5">
+                                    {{ $product->company->name ?? 'LDR Comercial' }}
+                                </span>
+                                <h3 class="text-xs sm:text-sm font-bold text-white group-hover:text-blue-300 transition-colors line-clamp-1 leading-snug">
+                                    {{ $product->name }}
+                                </h3>
+                                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-white/10">
+                                    <div class="flex items-baseline gap-1.5">
+                                        <span class="text-xs sm:text-sm font-extrabold text-amber-400">
+                                            Bs. {{ number_format($product->price, 2) }}
+                                        </span>
+                                        @if($product->original_price && $product->original_price > $product->price)
+                                            <span class="text-[10px] text-slate-400 line-through">
+                                                Bs. {{ number_format($product->original_price, 2) }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <span class="text-[11px] font-bold text-white/80 group-hover:text-white group-hover:translate-x-1 transition-all flex items-center gap-0.5">
+                                        Ver <span class="text-xs">→</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+                    @empty
+                        <!-- Fallback si no hay productos aún -->
+                        @for($i = 1; $i <= 3; $i++)
+                            <div class="relative flex-1 min-h-[120px] rounded-2xl overflow-hidden border border-slate-200/90 dark:border-white/10 bg-gradient-to-br from-slate-900 to-slate-950 p-4 flex flex-col justify-end text-white">
+                                <span class="text-[10px] font-bold uppercase text-blue-400">Catálogo LDR</span>
+                                <p class="text-xs font-bold text-slate-200">Suministros y Productos B2B</p>
+                            </div>
+                        @endfor
+                    @endforelse
                 </div>
-                <div class="flex items-center gap-3 justify-center sm:justify-start">
-                    <span class="text-xl sm:text-2xl">⚡</span>
-                    <div>
-                        <div class="text-sm sm:text-base font-black text-white leading-tight">24-48h</div>
-                        <div class="text-[11px] text-slate-400">Cotizaciones B2B</div>
+
+            </div>
+
+            <!-- Barra de Estadísticas y Confianza -->
+            <div class="mt-4 sm:mt-5 rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white/90 dark:bg-slate-950/80 backdrop-blur-md py-3.5 px-4 sm:px-6 shadow-xs">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-slate-700 dark:text-slate-300 text-center sm:text-left">
+                    <div class="flex items-center gap-3 justify-center sm:justify-start">
+                        <span class="text-xl sm:text-2xl">🏢</span>
+                        <div>
+                            <div class="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">500+</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400">Empresas Verificadas</div>
+                        </div>
                     </div>
-                </div>
-                <div class="flex items-center gap-3 justify-center sm:justify-start">
-                    <span class="text-xl sm:text-2xl">🇧🇴</span>
-                    <div>
-                        <div class="text-sm sm:text-base font-black text-white leading-tight">Nacional</div>
-                        <div class="text-[11px] text-slate-400">Envíos a toda Bolivia</div>
+                    <div class="flex items-center gap-3 justify-center sm:justify-start">
+                        <span class="text-xl sm:text-2xl">💎</span>
+                        <div>
+                            <div class="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">100%</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400">Precios Transparentes</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 justify-center sm:justify-start">
+                        <span class="text-xl sm:text-2xl">⚡</span>
+                        <div>
+                            <div class="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">24-48h</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400">Cotizaciones B2B</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 justify-center sm:justify-start">
+                        <span class="text-xl sm:text-2xl">🇧🇴</span>
+                        <div>
+                            <div class="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">Nacional</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400">Envíos a toda Bolivia</div>
+                        </div>
                     </div>
                 </div>
             </div>
+
         </div>
     </section>
 
@@ -472,6 +585,169 @@
 
 
     <!-- ========================================================================= -->
+    <!-- 6. COMUNIDAD OFICIAL EN WHATSAPP (Catálogos, Promociones y Networking B2B) -->
+    <!-- ========================================================================= -->
+    <section id="comunidad-whatsapp" class="py-16 sm:py-20 bg-gradient-to-b from-slate-50 via-emerald-50/30 to-slate-50 dark:from-[#080e1e] dark:via-[#091b19]/40 dark:to-[#080e1e] border-b border-slate-200/80 dark:border-white/10 transition-colors relative overflow-hidden">
+        
+        <!-- Elementos decorativos sutiles de fondo -->
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            
+            <!-- ENCABEZADO DE LA SECCIÓN -->
+            <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-black tracking-wide uppercase mb-3">
+                    <span class="w-2 h-2 rounded-full bg-[#25D366] animate-pulse"></span>
+                    <span>Comunidad Oficial WhatsApp · Bolivia</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    Únete a Nuestra Red Comercial en WhatsApp
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
+                    Un espacio creado para que los negocios que publican sus catálogos en <strong class="text-slate-900 dark:text-white">LDR Comercial</strong> puedan conectar directamente, difundir sus promociones, ofrecer stock y generar alianzas comerciales con compradores y distribuidores en todo el país.
+                </p>
+            </div>
+
+            <!-- TARJETAS DE LOS DOS GRUPOS DE WHATSAPP -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
+                
+                <!-- GRUPO 1: CATÁLOGOS, COMERCIOS & PROVEEDORES -->
+                <div class="bg-white dark:bg-[#0b132b] rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-white/10 shadow-sm hover:shadow-xl hover:border-emerald-500/40 dark:hover:border-emerald-400/40 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                    
+                    <div>
+                        <!-- Badge superior -->
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl shadow-xs">
+                                🏬
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-[11px] font-bold text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-white/10">
+                                Grupo de Proveedores
+                            </span>
+                        </div>
+
+                        <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                            Comunidad de Catálogos & Comercios
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                            Diseñado exclusivamente para dueños de empresas, comerciantes, importadores y negocios registrados en la plataforma.
+                        </p>
+
+                        <!-- Puntos clave -->
+                        <ul class="mt-5 space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+                                <span>Difunde nuevos catálogos y líneas de productos técnicos.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+                                <span>Alianzas estratégicas B2B y compras al por mayor directo de fábrica.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+                                <span>Soporte e impulso comercial para tu catálogo online.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Botón de Unión -->
+                    <div class="mt-8 pt-5 border-t border-slate-100 dark:border-white/10">
+                        <a 
+                            href="https://chat.whatsapp.com/IY9ezdhEFt28oNanTUz0dT" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            class="w-full inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-[#25D366] hover:bg-[#20ba59] text-white font-black text-xs sm:text-sm tracking-wide shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                        >
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                            </svg>
+                            <span>Unirme al Grupo de Comercios</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- GRUPO 2: PROMOCIONES, OFERTAS & OPORTUNIDADES -->
+                <div class="bg-white dark:bg-[#0b132b] rounded-3xl p-6 sm:p-8 border border-slate-200/90 dark:border-white/10 shadow-sm hover:shadow-xl hover:border-emerald-500/40 dark:hover:border-emerald-400/40 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+
+                    <div>
+                        <!-- Badge superior -->
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl shadow-xs">
+                                🔥
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-[11px] font-bold text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-white/10">
+                                Ofertas y Liquidaciones
+                            </span>
+                        </div>
+
+                        <h3 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                            Red de Promociones & Oportunidades
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                            El canal ideal para enviar y recibir promociones de temporada, ofertas flash y pedidos especiales de clientes.
+                        </p>
+
+                        <!-- Puntos clave -->
+                        <ul class="mt-5 space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+                                <span>Comparte tus ofertas, promociones con descuento y liquidación de stock.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+                                <span>Clientes y empresas buscando productos con entrega inmediata.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">✓</span>
+                                <span>Trato directo y transparente sin comisiones intermedias.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Botón de Unión -->
+                    <div class="mt-8 pt-5 border-t border-slate-100 dark:border-white/10">
+                        <a 
+                            href="https://chat.whatsapp.com/DZ9VxMPvhYE5fmbtCL8R4J?s=cl&p=a&mlu=4&ilr=4" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            class="w-full inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-[#25D366] hover:bg-[#20ba59] text-white font-black text-xs sm:text-sm tracking-wide shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                        >
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                            </svg>
+                            <span>Unirme al Grupo de Promociones</span>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- BANNER DE REGLAS Y BUENA CONVIVENCIA -->
+            <div class="mt-8 max-w-5xl mx-auto bg-white/70 dark:bg-white/[0.03] backdrop-blur-sm rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3 text-left">
+                    <span class="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base shrink-0">
+                        🛡️
+                    </span>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        <strong class="text-slate-800 dark:text-slate-200">Comunidad Comercial Regulada:</strong> Espacios destinados a empresas y clientes serios en Bolivia. Moderación activa contra spam para garantizar oportunidades de negocio de valor.
+                    </p>
+                </div>
+                <a 
+                    href="{{ route('afiliacion') }}" 
+                    class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline shrink-0"
+                >
+                    Publicar mi catálogo en la web →
+                </a>
+            </div>
+
+        </div>
+    </section>
+
+
+
+    <!-- ========================================================================= -->
     <!-- 7. FOOTER CORPORATIVO (Fiel al estilo B2B limpio) -->
     <!-- ========================================================================= -->
     <footer class="bg-white dark:bg-[#060a16] border-t border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 text-xs sm:text-sm transition-colors">
@@ -512,6 +788,7 @@
                         <li><a href="{{ route('sales.index') }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition">Cotizaciones Proforma</a></li>
                         <li><a href="{{ route('offers.index') }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition">Ofertas al por Mayor</a></li>
                         <li><a href="{{ route('events.public') }}" class="hover:text-blue-600 dark:hover:text-blue-400 transition">Agenda de Ferias</a></li>
+                        <li><a href="#comunidad-whatsapp" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline transition">💬 Comunidad WhatsApp</a></li>
                     </ul>
                 </div>
 

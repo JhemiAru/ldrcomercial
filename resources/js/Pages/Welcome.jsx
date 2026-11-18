@@ -928,6 +928,84 @@ export default function Welcome({
                     ))}
                 </div>
 
+                {/* ═══════════════════════════════════════════════
+                    COMUNIDAD OFICIAL EN WHATSAPP (Catálogos y Promociones)
+                   ═══════════════════════════════════════════════ */}
+                <div id="comunidad-whatsapp" className="mt-16 bg-gradient-to-b from-white via-emerald-50/40 to-white dark:from-[#0b132b] dark:via-[#091b19]/40 dark:to-[#0b132b] rounded-3xl p-6 sm:p-10 border border-emerald-200/80 dark:border-white/10 shadow-sm relative overflow-hidden">
+                    <div className="text-center max-w-3xl mx-auto mb-10">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black tracking-wide uppercase mb-3">
+                            <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse"></span>
+                            <span>Comunidad Oficial WhatsApp · Bolivia</span>
+                        </div>
+                        <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                            Únete a Nuestra Red Comercial en WhatsApp
+                        </h3>
+                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
+                            Conecta directamente con comercios, proveedores y compradores en Bolivia. Difunde tus catálogos, comparte ofertas de temporada y atiende pedidos especiales al instante.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                        {/* Grupo 1 */}
+                        <div className="bg-white dark:bg-white/5 rounded-2xl p-6 border border-slate-200/80 dark:border-white/10 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="text-3xl">🏬</span>
+                                    <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/10 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                                        Catálogos & Proveedores
+                                    </span>
+                                </div>
+                                <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                                    Comunidad de Catálogos & Comercios
+                                </h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                                    Para empresas, comerciantes y distribuidores con catálogo en LDR Comercial. Alianzas B2B y compras al por mayor.
+                                </p>
+                            </div>
+                            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/10">
+                                <a
+                                    href="https://chat.whatsapp.com/IY9ezdhEFt28oNanTUz0dT"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-black text-xs shadow-md transition"
+                                >
+                                    <span>💬</span>
+                                    <span>Unirme al Grupo de Comercios</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        {/* Grupo 2 */}
+                        <div className="bg-white dark:bg-white/5 rounded-2xl p-6 border border-slate-200/80 dark:border-white/10 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="text-3xl">🔥</span>
+                                    <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/10 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                                        Promociones & Ofertas
+                                    </span>
+                                </div>
+                                <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                                    Red de Promociones & Oportunidades
+                                </h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                                    Para compartir promociones flash, liquidaciones de stock y atender pedidos directos de clientes.
+                                </p>
+                            </div>
+                            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-white/10">
+                                <a
+                                    href="https://chat.whatsapp.com/DZ9VxMPvhYE5fmbtCL8R4J?s=cl&p=a&mlu=4&ilr=4"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-black text-xs shadow-md transition"
+                                >
+                                    <span>💬</span>
+                                    <span>Unirme al Grupo de Promociones</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Banner CTA para Negocios */}
                 <div className="mt-14 bg-gradient-to-r from-slate-900 to-blue-950 rounded-3xl p-8 sm:p-10 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
                     <div>

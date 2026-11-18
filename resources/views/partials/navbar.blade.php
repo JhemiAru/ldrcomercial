@@ -261,6 +261,15 @@
                     <li><a href="{{ route('offers.index') }}" class="flex items-center gap-3 px-3 py-2 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white rounded-xl transition"><span>🔥</span> Ofertas con Descuento</a></li>
                     <li><a href="{{ route('events.public') }}" class="flex items-center gap-3 px-3 py-2 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white rounded-xl transition"><span>⚽</span> Eventos & Ferias</a></li>
                     <li><a href="{{ route('sales.index') }}" class="flex items-center gap-3 px-3 py-2 hover:bg-blue-50 dark:hover:bg-white/10 hover:text-blue-600 dark:hover:text-white rounded-xl transition"><span>📋</span> Ventas & Cotizaciones</a></li>
+                    <li>
+                        <a href="{{ route('home') }}#comunidad-whatsapp" class="flex items-center gap-3 px-3 py-2 bg-emerald-50/80 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 rounded-xl transition">
+                            <span class="text-base">💬</span>
+                            <span>Comunidad WhatsApp</span>
+                            <span class="ml-auto text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-200/70 dark:bg-emerald-500/30 text-emerald-800 dark:text-emerald-200">
+                                2 Grupos
+                            </span>
+                        </a>
+                    </li>
                 </ul>
             </div>
 
