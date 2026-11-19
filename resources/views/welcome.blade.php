@@ -694,55 +694,55 @@
     <!-- ========================================================================= -->
     <!-- 6. BANNER APP MÓVIL ANDROID (Descarga Oficial y Acceso Móvil) -->
     <!-- ========================================================================= -->
-    <section id="descargar-app" class="py-14 sm:py-20 bg-gradient-to-b from-slate-100 via-slate-900 to-slate-950 dark:from-[#060a16] dark:via-[#071328] dark:to-[#080e1e] relative overflow-hidden transition-colors border-b border-slate-200/80 dark:border-white/10">
+    <section id="descargar-app" class="py-14 sm:py-20 bg-gradient-to-b from-slate-50 via-slate-100 to-slate-50 dark:from-[#060a16] dark:via-[#071328] dark:to-[#080e1e] relative overflow-hidden transition-colors border-b border-slate-200/80 dark:border-white/10">
         <!-- Luces y efectos glow de fondo -->
-        <div class="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/15 dark:bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute top-1/3 right-10 w-96 h-96 bg-emerald-500/15 dark:bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/10 dark:bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute top-1/3 right-10 w-96 h-96 bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="relative rounded-3xl bg-gradient-to-br from-slate-900/95 via-[#081735]/95 to-slate-950/95 border border-blue-500/30 p-7 sm:p-12 lg:p-14 shadow-2xl backdrop-blur-xl overflow-hidden">
+            <div class="relative rounded-3xl bg-white dark:bg-gradient-to-br dark:from-slate-900/95 dark:via-[#081735]/95 dark:to-slate-950/95 border border-slate-200/90 dark:border-blue-500/30 p-7 sm:p-12 lg:p-14 shadow-xl dark:shadow-2xl overflow-hidden transition-colors">
                 
                 <!-- Destello decorativo superior -->
-                <div class="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-blue-500/20 via-transparent to-transparent pointer-events-none"></div>
+                <div class="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-blue-500/10 dark:from-blue-500/20 via-transparent to-transparent pointer-events-none"></div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
                     
                     <!-- LADO IZQUIERDO: TEXTOS, BENEFICIOS Y BOTONES (7 COLS) -->
                     <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
-                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black tracking-wide uppercase">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-400/40 text-emerald-800 dark:text-emerald-300 text-xs font-black tracking-wide uppercase">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                             <span>App Móvil Oficial · Android</span>
                         </div>
 
-                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
-                            Lleva el Catálogo de <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-emerald-400">LDR Comercial</span> en tu Bolsillo
+                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+                            Lleva el Catálogo de <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-sky-600 to-emerald-600 dark:from-blue-400 dark:via-sky-300 dark:to-emerald-400">LDR Comercial</span> en tu Bolsillo
                         </h2>
 
-                        <p class="text-xs sm:text-sm lg:text-base text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                        <p class="text-xs sm:text-sm lg:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
                             Descubre comercios, cotiza suministros en Bs. directamente por WhatsApp, ubica tiendas y ferreterías en el mapa interactivo y entérate de las mejores ofertas industriales en Bolivia.
                         </p>
 
                         <!-- Puntos destacados de la App -->
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                            <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 text-left">
+                            <div class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/90 dark:border-white/10 text-left shadow-xs">
                                 <span class="text-2xl">⚡</span>
                                 <div>
-                                    <h4 class="text-xs font-bold text-white">Cotizaciones</h4>
-                                    <p class="text-[11px] text-slate-400">Directo a WhatsApp</p>
+                                    <h4 class="text-xs font-bold text-slate-900 dark:text-white">Cotizaciones</h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Directo a WhatsApp</p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 text-left">
+                            <div class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/90 dark:border-white/10 text-left shadow-xs">
                                 <span class="text-2xl">📍</span>
                                 <div>
-                                    <h4 class="text-xs font-bold text-white">Mapa GPS</h4>
-                                    <p class="text-[11px] text-slate-400">Tiendas en Bolivia</p>
+                                    <h4 class="text-xs font-bold text-slate-900 dark:text-white">Mapa GPS</h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Tiendas en Bolivia</p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 text-left">
+                            <div class="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/90 dark:border-white/10 text-left shadow-xs">
                                 <span class="text-2xl">🛡️</span>
                                 <div>
-                                    <h4 class="text-xs font-bold text-white">Verificadas</h4>
-                                    <p class="text-[11px] text-slate-400">Empresas 100% reales</p>
+                                    <h4 class="text-xs font-bold text-slate-900 dark:text-white">Verificadas</h4>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Empresas 100% reales</p>
                                 </div>
                             </div>
                         </div>
@@ -753,29 +753,29 @@
                                 <a 
                                     href="{{ asset('app-ldrcomercial.apk') }}" 
                                     download="ldrcomercial.apk"
-                                    class="inline-flex items-center justify-center gap-3.5 px-7 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold text-base transition-all duration-300 shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.03] cursor-pointer group w-full sm:w-auto"
+                                    class="inline-flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm sm:text-base transition-all duration-200 shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/40 hover:scale-[1.02] cursor-pointer group w-full sm:w-auto"
                                     title="Descargar instalador APK directo para Android"
                                 >
-                                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-2xl shrink-0 group-hover:rotate-12 transition-transform">
+                                    <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-xl shrink-0 group-hover:rotate-12 transition-transform">
                                         🤖
                                     </div>
                                     <div class="text-left">
                                         <div class="text-[10px] uppercase font-black tracking-widest text-emerald-100 leading-none">Instalación Directa Gratuita</div>
-                                        <div class="text-lg font-black text-white leading-tight">Descargar APK Android</div>
+                                        <div class="text-base font-black text-white leading-tight">Descargar APK Android</div>
                                     </div>
-                                    <svg class="w-6 h-6 ml-2 transition-transform group-hover:translate-y-1 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-5 h-5 ml-1 transition-transform group-hover:translate-y-0.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                                     </svg>
                                 </a>
 
-                                <div class="text-center sm:text-left space-y-1">
-                                    <div class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400">
-                                        <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <div class="text-center sm:text-left space-y-0.5">
+                                    <div class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                        <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                         </svg>
                                         <span>APK Oficial · 100% Seguro</span>
                                     </div>
-                                    <p class="text-[11px] text-slate-400">Compatible con cualquier celular o tablet Android</p>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Compatible con cualquier celular o tablet Android</p>
                                 </div>
                             </div>
                         </div>
@@ -785,11 +785,11 @@
                     <div class="lg:col-span-5 flex justify-center">
                         <div class="relative group max-w-[340px] sm:max-w-[390px] w-full">
                             
-                            <!-- Resplandor de fondo decorativo -->
-                            <div class="absolute -inset-3 bg-gradient-to-tr from-blue-600/40 via-sky-500/30 to-emerald-500/40 rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 transition duration-500 pointer-events-none"></div>
+                            <!-- Sombra y glow decorativo -->
+                            <div class="absolute -inset-2 bg-gradient-to-tr from-blue-500/20 via-sky-400/20 to-emerald-500/20 dark:from-blue-600/40 dark:via-sky-500/30 dark:to-emerald-500/40 rounded-3xl blur-xl opacity-70 group-hover:opacity-100 transition duration-300 pointer-events-none"></div>
 
                             <!-- Contenedor del Flyer -->
-                            <div class="relative rounded-3xl overflow-hidden border-2 border-white/20 bg-slate-900/90 shadow-2xl backdrop-blur-md">
+                            <div class="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-white/20 bg-white dark:bg-slate-900 shadow-xl dark:shadow-2xl">
                                 <a 
                                     href="{{ asset('app-ldrcomercial.apk') }}" 
                                     download="ldrcomercial.apk" 
@@ -799,13 +799,13 @@
                                     <img 
                                         src="{{ asset('flyers/flyer.png') }}" 
                                         alt="Flyer Oficial App LDR Comercial" 
-                                        class="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+                                        class="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
                                         loading="lazy"
                                     >
                                     
                                     <!-- Overlay sutil con llamado a la acción al pasar el mouse -->
-                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
-                                        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 text-white font-black text-xs shadow-lg">
+                                    <div class="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-5">
+                                        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-lg">
                                             <span>⬇️</span> Haz clic para Descargar APK
                                         </span>
                                     </div>
@@ -813,14 +813,14 @@
                             </div>
 
                             <!-- Insignia Flotante Superior -->
-                            <div class="absolute -top-3.5 -right-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[11px] font-black px-3.5 py-1.5 rounded-full shadow-xl flex items-center gap-1.5 border border-white/30 animate-bounce">
+                            <div class="absolute -top-3 -right-3 bg-emerald-600 text-white text-[11px] font-black px-3.5 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 border border-white/80 animate-bounce">
                                 <span>📱</span>
-                                <span>App Oficial Android</span>
+                                <span>App Oficial</span>
                             </div>
 
                             <!-- Insignia Flotante Inferior -->
-                            <div class="absolute -bottom-3.5 -left-3.5 bg-slate-900/95 text-white text-[11px] font-bold px-3.5 py-1.5 rounded-full shadow-xl flex items-center gap-1.5 border border-emerald-500/40 backdrop-blur-md">
-                                <span class="text-emerald-400">⚡</span>
+                            <div class="absolute -bottom-3 -left-3 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-[11px] font-bold px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5 border border-slate-200 dark:border-emerald-500/40 backdrop-blur-md">
+                                <span class="text-emerald-500 font-black">⚡</span>
                                 <span>Descarga Inmediata</span>
                             </div>
 
