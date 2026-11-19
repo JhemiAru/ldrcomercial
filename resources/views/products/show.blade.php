@@ -69,34 +69,37 @@
         })();
     </script>
 
+    @php
+        $productJsonLd = [
+            '@context' => 'https://schema.org/',
+            '@type' => 'Product',
+            'name' => $product->name,
+            'image' => [
+                $productImg
+            ],
+            'description' => $productOgDesc,
+            'sku' => 'PROD-' . $product->id,
+            'brand' => [
+                '@type' => 'Brand',
+                'name' => $product->brand->name ?? $companyName
+            ],
+            'offers' => [
+                '@type' => 'Offer',
+                'url' => route('products.show', $product->slug ?: $product->id),
+                'priceCurrency' => 'BOB',
+                'price' => number_format($product->price, 2, '.', ''),
+                'itemCondition' => 'https://schema.org/NewCondition',
+                'availability' => 'https://schema.org/' . (($product->stock ?? 1) > 0 ? 'InStock' : 'OutOfStock'),
+                'seller' => [
+                    '@type' => 'Organization',
+                    'name' => $companyName
+                ]
+            ]
+        ];
+    @endphp
     <!-- Datos Estructurados JSON-LD Schema.org para Google Shopping y Búsquedas Enriquecidas -->
     <script type="application/ld+json">
-    {
-        "@context": "https://schema.org/",
-        "@type": "Product",
-        "name": "{{ addslashes($product->name) }}",
-        "image": [
-            "{{ $productImg }}"
-        ],
-        "description": "{{ addslashes($productOgDesc) }}",
-        "sku": "PROD-{{ $product->id }}",
-        "brand": {
-            "@type": "Brand",
-            "name": "{{ addslashes($product->brand->name ?? $companyName) }}"
-        },
-        "offers": {
-            "@type": "Offer",
-            "url": "{{ route('products.show', $product->slug ?: $product->id) }}",
-            "priceCurrency": "BOB",
-            "price": "{{ number_format($product->price, 2, '.', '') }}",
-            "itemCondition": "https://schema.org/NewCondition",
-            "availability": "https://schema.org/{{ ($product->stock ?? 1) > 0 ? 'InStock' : 'OutOfStock' }}",
-            "seller": {
-                "@type": "Organization",
-                "name": "{{ addslashes($companyName) }}"
-            }
-        }
-    }
+    {!! json_encode($productJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
     </script>
 </head>
 <body class="bg-slate-50 dark:bg-[#080e1e] text-slate-800 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white transition-colors">

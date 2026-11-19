@@ -30,46 +30,49 @@
     <title>LDR Comercial - One Technical Supplier for the Whole Line | Bolivia</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
+    @php
+        $siteJsonLd = [
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                [
+                    '@type' => 'Organization',
+                    '@id' => url('/') . '/#organization',
+                    'name' => 'LDR Comercial',
+                    'url' => url('/'),
+                    'logo' => [
+                        '@type' => 'ImageObject',
+                        'url' => asset('favicon.png')
+                    ],
+                    'description' => 'Tu proveedor técnico y comercial para toda la industria en Bolivia. Ferretería, automatización, partes de precisión y suministros B2B.',
+                    'address' => [
+                        '@type' => 'PostalAddress',
+                        'addressCountry' => 'BO'
+                    ]
+                ],
+                [
+                    '@type' => 'WebSite',
+                    '@id' => url('/') . '/#website',
+                    'url' => url('/'),
+                    'name' => 'LDR Comercial Bolivia',
+                    'description' => 'Plataforma B2B de Proveedores Industriales y Comerciales en Bolivia',
+                    'publisher' => [
+                        '@id' => url('/') . '/#organization'
+                    ],
+                    'potentialAction' => [
+                        '@type' => 'SearchAction',
+                        'target' => [
+                            '@type' => 'EntryPoint',
+                            'urlTemplate' => url('/empresas') . '?search={search_term_string}'
+                        ],
+                        'query-input' => 'required name=search_term_string'
+                    ]
+                ]
+            ]
+        ];
+    @endphp
     <!-- Datos Estructurados JSON-LD (Google Rich Snippets) -->
     <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@graph": [
-            {
-                "@type": "Organization",
-                "@id": "{{ url('/') }}/#organization",
-                "name": "LDR Comercial",
-                "url": "{{ url('/') }}",
-                "logo": {
-                    "@type": "ImageObject",
-                    "url": "{{ asset('favicon.png') }}"
-                },
-                "description": "Tu proveedor técnico y comercial para toda la industria en Bolivia. Ferretería, automatización, partes de precisión y suministros B2B.",
-                "address": {
-                    "@type": "PostalAddress",
-                    "addressCountry": "BO"
-                }
-            },
-            {
-                "@type": "WebSite",
-                "@id": "{{ url('/') }}/#website",
-                "url": "{{ url('/') }}",
-                "name": "LDR Comercial Bolivia",
-                "description": "Plataforma B2B de Proveedores Industriales y Comerciales en Bolivia",
-                "publisher": {
-                    "@id": "{{ url('/') }}/#organization"
-                },
-                "potentialAction": {
-                    "@type": "SearchAction",
-                    "target": {
-                        "@type": "EntryPoint",
-                        "urlTemplate": "{{ url('/empresas') }}?search={search_term_string}"
-                    },
-                    "query-input": "required name=search_term_string"
-                }
-            }
-        ]
-    }
+    {!! json_encode($siteJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
     </script>
 
     <!-- Google Fonts -->
