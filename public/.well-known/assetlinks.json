@@ -7,7 +7,8 @@
       "namespace": "android_app",
       "package_name": "com.ldrcomercial.app",
       "sha256_cert_fingerprints": [
-        "63:0C:3B:80:9D:E3:E0:5E:A9:4E:C0:A7:65:A7:3E:E2:0E:81:4D:1B:4E:08:39:94:BD:33:38:9D:68:CC:E8:70"
+        "63:0C:3B:80:9D:E3:E0:5E:A9:4E:C0:A7:65:A7:3E:E2:0E:81:4D:1B:4E:08:39:94:BD:33:38:9D:68:CC:E8:70",
+        "5E:A8:65:B4:EE:4D:20:14:67:A4:7D:94:31:87:54:7C:7F:39:78:22:01:28:A6:97:68:10:31:F0:4F:0F:3F:B0"
       ]
     }
   }
