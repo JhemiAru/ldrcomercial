@@ -264,44 +264,92 @@ export default function Show({ company, categories }) {
             />
 
             {/* ═══════════════════════════════════════════════
-                HERO SECTION (BANNER & CABECERA DE LA EMPRESA)
+                HERO STOREFRONT: BANNER DE PORTADA (ESTILO MODERNO)
                ═══════════════════════════════════════════════ */}
-            <div className="relative bg-[#0b132b] text-white pt-16 sm:pt-20 pb-0 overflow-hidden">
-                
-                {/* Imagen de Fondo con Overlay Gradiente */}
-                <div className="absolute inset-0 z-0">
-                    <img 
-                        src={company.banner || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80'} 
-                        alt={company.name} 
-                        className="w-full h-full object-cover opacity-30 mix-blend-overlay" 
-                        onError={(e) => { e.currentTarget.src = fallbackImage; }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#0b132b] via-[#0b132b]/95 to-slate-900/60"></div>
-                </div>
-
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="max-w-4xl pb-12 sm:pb-16">
-                        
-                        {/* Categoría & Badges */}
-                        <div className="flex flex-wrap items-center gap-2.5 mb-6">
-                            <span className="w-8 h-[2px] bg-blue-500"></span>
-                            <span className="text-xs font-black uppercase tracking-widest text-blue-400">
-                                {company.category?.name || 'ECOSISTEMA EMPRESARIAL B2B'}
-                            </span>
-                            {company.is_verified && (
-                                <span className="px-3 py-1 rounded-full text-[11px] font-black bg-blue-500/20 text-blue-300 border border-blue-400/30 flex items-center gap-1.5 shadow-xs">
-                                    <VerifiedBadge size="sm" />
-                                    <span>Verificada Presencialmente</span>
+            <div className="relative w-full bg-slate-900 overflow-hidden">
+                {/* Portada / Banner Panorámico en Alta Calidad */}
+                <div 
+                    className="relative w-full h-56 sm:h-72 md:h-88 lg:h-96 overflow-hidden group"
+                    onMouseEnter={() => setIsCarouselHovered(true)}
+                    onMouseLeave={() => setIsCarouselHovered(false)}
+                >
+                    {carouselSlides.map((slide, idx) => (
+                        <div
+                            key={idx}
+                            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                                idx === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                            }`}
+                        >
+                            <img 
+                                src={slide.image} 
+                                alt={slide.title || company.name} 
+                                className="w-full h-full object-cover object-center" 
+                                onError={(e) => { e.currentTarget.src = fallbackImage; }}
+                            />
+                            {/* Gradiente sutil inferior para contraste */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
+                            
+                            {/* Badge Flotante del Banner */}
+                            <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                                <span className="px-3 py-1 rounded-full bg-black/50 text-white backdrop-blur-md text-[10px] font-black uppercase tracking-wider border border-white/20">
+                                    {slide.badge || 'STOREFRONT OFICIAL'}
                                 </span>
-                            )}
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-slate-300">
-                                📍 {company.city || 'Bolivia'}
-                            </span>
+                            </div>
                         </div>
+                    ))}
+
+                    {/* Controles de Navegación del Banner si hay más de 1 imagen */}
+                    {carouselSlides.length > 1 && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={handlePrevSlide}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg cursor-pointer"
+                                title="Anterior"
+                            >
+                                ❮
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleNextSlide}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg cursor-pointer"
+                                title="Siguiente"
+                            >
+                                ❯
+                            </button>
+                            <div className="absolute bottom-4 right-6 z-30 flex items-center gap-1.5">
+                                {carouselSlides.map((_, dotIdx) => (
+                                    <button
+                                        key={dotIdx}
+                                        type="button"
+                                        onClick={() => setCurrentSlide(dotIdx)}
+                                        className={`transition-all duration-300 rounded-full ${
+                                            dotIdx === currentSlide
+                                                ? 'w-6 h-2 bg-blue-500 shadow-md'
+                                                : 'w-2 h-2 bg-white/60 hover:bg-white'
+                                        }`}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            {/* ═══════════════════════════════════════════════
+                TARJETA FLOTANTE DE PERFIL DEL NEGOCIO (TONO CLARO MODERNO)
+               ═══════════════════════════════════════════════ */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-16 sm:-mt-20 z-20 mb-8">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/90 dark:border-white/10 transition-colors">
+                    
+                    {/* Fila Superior: Logo + Badges + Suite Social */}
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                         
-                        {/* Nombre de la Empresa y Logo */}
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-5 mb-6">
-                            <div className="w-24 h-24 shrink-0 bg-white dark:bg-slate-900 rounded-3xl p-1.5 shadow-2xl overflow-hidden border-2 border-white/20">
+                        {/* Logo Flotante y Datos Principales */}
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6 text-center sm:text-left">
+                            
+                            {/* Contenedor del Logo */}
+                            <div className="w-28 h-28 sm:w-36 sm:h-36 shrink-0 bg-white dark:bg-slate-800 rounded-3xl p-2 shadow-2xl overflow-hidden border-4 border-white dark:border-slate-800 -mt-16 sm:-mt-24 relative z-30">
                                 {company.logo ? (
                                     <img 
                                         src={company.logo} 
@@ -310,166 +358,257 @@ export default function Show({ company, categories }) {
                                         onError={(e) => { e.currentTarget.src = fallbackImage; }}
                                     />
                                 ) : (
-                                    <div className="w-full h-full rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-3xl font-black text-white">
+                                    <div className="w-full h-full rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-4xl font-black text-white">
                                         {company.name.charAt(0)}
                                     </div>
                                 )}
                             </div>
 
-                            <div>
-                                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black leading-tight tracking-tight flex items-center gap-3">
-                                    <span>{company.name}</span>
+                            {/* Títulos y Metadatos */}
+                            <div className="space-y-2">
+                                {/* Badges */}
+                                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                                    <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40">
+                                        {company.category?.name || 'ECOSISTEMA EMPRESARIAL B2B'}
+                                    </span>
+                                    {company.is_verified && (
+                                        <span className="px-3 py-1 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1.5 shadow-xs">
+                                            <VerifiedBadge size="sm" />
+                                            <span>Tienda Verificada</span>
+                                        </span>
+                                    )}
+                                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                        📍 {company.city || 'Bolivia'}
+                                    </span>
+                                </div>
+
+                                {/* Nombre del Negocio */}
+                                <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                                    {company.name}
                                 </h1>
+
                                 {company.legal_name && company.legal_name !== company.name && (
-                                    <p className="text-xs sm:text-sm text-slate-400 mt-1 font-medium">
+                                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
                                         {company.legal_name} {company.tax_id ? `• NIT: ${company.tax_id}` : ''}
                                     </p>
                                 )}
+
+                                {/* Datos de Atención y Ubicación Rápida */}
+                                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-slate-600 dark:text-slate-300 pt-1">
+                                    {(company.atencion || company.attention_hours) && (
+                                        <span className="flex items-center gap-1.5 font-medium">
+                                            <span className="text-amber-500">⏰</span>
+                                            <span>Horario: <strong>{company.atencion || company.attention_hours}</strong></span>
+                                        </span>
+                                    )}
+                                    {company.address && (
+                                        <span className="flex items-center gap-1.5 font-medium">
+                                            <span className="text-blue-500">📍</span>
+                                            <span>{company.address}</span>
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                        
-                        {/* Descripción breve */}
-                        <p className="text-slate-300 text-sm sm:text-base md:text-lg mb-8 max-w-2xl leading-relaxed">
-                            {company.short_description || 'Proveedor comercial verificado. Catálogo de productos y soluciones industriales, técnicas y comerciales con trato directo y sin intermediarios.'}
+
+                        {/* Botones Sociales (Me Gusta, Seguir, Compartir) */}
+                        <div className="flex items-center justify-center sm:justify-end gap-2 shrink-0 pt-2 md:pt-0">
+                            {/* Me Gusta */}
+                            <button
+                                type="button"
+                                onClick={handleToggleLike}
+                                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer select-none ${
+                                    liked
+                                        ? 'bg-rose-50 text-rose-600 border-rose-300 shadow-xs'
+                                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-white/10'
+                                }`}
+                                title="Me gusta"
+                            >
+                                <svg 
+                                    className={`w-4 h-4 transition-transform ${liked ? 'scale-110 fill-rose-500 text-rose-500' : 'text-slate-400'}`} 
+                                    viewBox="0 0 24 24" 
+                                    fill={liked ? "currentColor" : "none"} 
+                                    stroke="currentColor" 
+                                    strokeWidth="2"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                <span>{liked ? 'Te gusta' : 'Me gusta'}</span>
+                                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono bg-black/5 dark:bg-white/10">
+                                    {likesCount}
+                                </span>
+                            </button>
+
+                            {/* Seguir */}
+                            <button
+                                type="button"
+                                onClick={handleToggleFollow}
+                                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer select-none ${
+                                    isFollowing
+                                        ? 'bg-blue-50 text-blue-600 border-blue-300 shadow-xs dark:bg-blue-900/30 dark:text-blue-300'
+                                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-white/10'
+                                }`}
+                                title="Seguir novedades de la empresa"
+                            >
+                                <span>{isFollowing ? '✓ Siguiendo' : '+ Seguir'}</span>
+                                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-mono bg-black/5 dark:bg-white/10">
+                                    {followersCount}
+                                </span>
+                            </button>
+
+                            {/* Compartir */}
+                            <button
+                                type="button"
+                                onClick={() => setShowShareModal(true)}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-50 hover:bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-white/10 transition cursor-pointer"
+                                title="Compartir catálogo"
+                            >
+                                <span>↗ Compartir</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Descripción de la Empresa */}
+                    <div className="mt-5 pt-5 border-t border-slate-100 dark:border-white/10">
+                        <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed max-w-4xl">
+                            {company.short_description || company.description || 'Proveedor comercial verificado. Catálogo de productos y soluciones industriales, técnicas y comerciales con trato directo y sin intermediarios.'}
                         </p>
                     </div>
-                </div>
 
-                {/* Cinta Inferior de Garantía B2B & Suite de Interacción */}
-                <div className="bg-[#050914] relative z-10 border-t border-white/10">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
-                        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
-                            
-                            {/* Insignias de Confianza B2B */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full xl:w-auto">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg shrink-0">📍</div>
-                                    <div>
-                                        <p className="text-white font-bold text-xs">Sede / Ciudad</p>
-                                        <p className="text-slate-400 text-[11px] truncate">{company.city || 'Bolivia'}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg shrink-0">🛡️</div>
-                                    <div>
-                                        <p className="text-white font-bold text-xs">Seguridad B2B</p>
-                                        <p className="text-slate-400 text-[11px]">100% Verificada</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg shrink-0">📦</div>
-                                    <div>
-                                        <p className="text-white font-bold text-xs">Catálogo Oficial</p>
-                                        <p className="text-slate-400 text-[11px]">{products.length} productos publicados</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg shrink-0">🤝</div>
-                                    <div>
-                                        <p className="text-white font-bold text-xs">Trato Comercial</p>
-                                        <p className="text-slate-400 text-[11px]">Directo con la empresa</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Separador vertical en desktop */}
-                            <div className="hidden xl:block h-10 w-[1px] bg-white/10"></div>
-
-                            {/* Suite de Botones de Interacción Social & B2B */}
-                            <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 sm:gap-3 w-full xl:w-auto pt-3 xl:pt-0 border-t xl:border-t-0 border-white/10">
-                                
-                                {/* 1. Botón Me Gusta */}
-                                <button
-                                    type="button"
-                                    onClick={handleToggleLike}
-                                    className={`flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border cursor-pointer select-none ${
-                                        liked
-                                            ? 'bg-rose-500/15 text-rose-400 border-rose-500/40 hover:bg-rose-500/25 shadow-xs shadow-rose-500/10'
-                                            : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10'
-                                    }`}
-                                    title="Me gusta"
+                    {/* Barra de Acciones Directas: WhatsApp + Redes Sociales Oficiales */}
+                    <div className="mt-6 pt-5 border-t border-slate-100 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        
+                        {/* Botón Principal de WhatsApp y Contacto */}
+                        <div className="flex flex-wrap items-center gap-3">
+                            {contactWhatsApp && (
+                                <a
+                                    href={contactWhatsApp}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-5 py-3 rounded-2xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-sm sm:text-base shadow-md shadow-emerald-500/25 transition-all transform hover:-translate-y-0.5 flex items-center gap-2.5 cursor-pointer"
                                 >
-                                    <svg 
-                                        className={`w-4 h-4 transition-transform ${liked ? 'scale-110 fill-rose-500 text-rose-500' : 'text-slate-400'}`} 
-                                        viewBox="0 0 24 24" 
-                                        fill={liked ? "currentColor" : "none"} 
-                                        stroke="currentColor" 
-                                        strokeWidth="2"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
                                     </svg>
-                                    <span>{liked ? 'Te gusta' : 'Me gusta'}</span>
-                                    <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono ${liked ? 'bg-rose-500/20 text-rose-300' : 'bg-white/10 text-slate-300'}`}>
-                                        {likesCount}
-                                    </span>
-                                </button>
+                                    <span>Contactar por WhatsApp</span>
+                                </a>
+                            )}
 
-                                {/* 2. Botón Seguir */}
-                                <button
-                                    type="button"
-                                    onClick={handleToggleFollow}
-                                    className={`flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border cursor-pointer select-none ${
-                                        isFollowing
-                                            ? 'bg-blue-500/20 text-blue-300 border-blue-400/40 hover:bg-blue-500/30 shadow-xs shadow-blue-500/10'
-                                            : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10'
-                                    }`}
-                                    title="Seguir novedades de la empresa"
-                                >
-                                    {isFollowing ? (
-                                        <>
-                                            <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            <span>Siguiendo</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                                            </svg>
-                                            <span>Seguir</span>
-                                        </>
-                                    )}
-                                    <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono ${isFollowing ? 'bg-blue-500/20 text-blue-300' : 'bg-white/10 text-slate-300'}`}>
-                                        {followersCount}
-                                    </span>
-                                </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowMessageModal(true)}
+                                className="px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-md shadow-blue-500/20 flex items-center gap-2 cursor-pointer"
+                            >
+                                <span>💬 Mandar Cotización</span>
+                            </button>
+                        </div>
 
-                                {/* 3. Botón Compartir */}
-                                <button
-                                    type="button"
-                                    onClick={() => setShowShareModal(true)}
-                                    className="flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl text-xs font-bold bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition cursor-pointer"
-                                    title="Compartir perfil de la empresa"
+                        {/* Redes Sociales Oficiales en Píldoras Limpias */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            {/* Facebook */}
+                            {fbUrl && (
+                                <a
+                                    href={fbUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 text-[#1877F2] font-bold text-xs flex items-center gap-1.5 transition border border-blue-200/80 dark:border-blue-800/40"
+                                    title="Página de Facebook"
                                 >
-                                    <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                                     </svg>
-                                    <span>Compartir</span>
-                                </button>
+                                    <span>Facebook</span>
+                                </a>
+                            )}
 
-                                {/* 4. Botón Mandar Mensaje */}
-                                <button
-                                    type="button"
-                                    onClick={() => setShowMessageModal(true)}
-                                    className="flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition transform hover:-translate-y-0.5 cursor-pointer"
-                                    title="Mandar mensaje a la empresa"
+                            {/* TikTok */}
+                            {ttUrl && (
+                                <a
+                                    href={ttUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-xs flex items-center gap-1.5 transition shadow-xs"
+                                    title="Cuenta de TikTok"
                                 >
-                                    <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
-                                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                                    <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+                                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
                                     </svg>
-                                    <span>Mandar Mensaje</span>
-                                </button>
+                                    <span>TikTok</span>
+                                </a>
+                            )}
 
-                            </div>
+                            {/* Instagram */}
+                            {igUrl && (
+                                <a
+                                    href={igUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-2 rounded-xl bg-pink-50 hover:bg-pink-100 dark:bg-pink-900/20 text-[#E1306C] font-bold text-xs flex items-center gap-1.5 transition border border-pink-200/80 dark:border-pink-800/40"
+                                    title="Instagram"
+                                >
+                                    <span>📷 Instagram</span>
+                                </a>
+                            )}
 
+                            {/* Sitio Web */}
+                            {webUrl && (
+                                <a
+                                    href={webUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition"
+                                    title="Sitio Web Oficial"
+                                >
+                                    <span>🌐 Web</span>
+                                </a>
+                            )}
+
+                            {/* Google Maps */}
+                            <a
+                                href={googleMapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition"
+                                title="Ver en Google Maps"
+                            >
+                                <span>🗺️ Mapa</span>
+                            </a>
                         </div>
                     </div>
-                </div>
 
+                    {/* Fila de Insignias de Confianza */}
+                    <div className="mt-6 pt-5 border-t border-slate-100 dark:border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center sm:text-left">
+                        <div className="flex items-center gap-3">
+                            <span className="text-xl">📍</span>
+                            <div>
+                                <p className="text-xs font-bold text-slate-800 dark:text-white">Ubicación</p>
+                                <p className="text-[11px] text-slate-500">{company.city || 'Bolivia'}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-xl">🛡️</span>
+                            <div>
+                                <p className="text-xs font-bold text-slate-800 dark:text-white">Seguridad</p>
+                                <p className="text-[11px] text-slate-500">100% Verificada</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-xl">📦</span>
+                            <div>
+                                <p className="text-xs font-bold text-slate-800 dark:text-white">Catálogo</p>
+                                <p className="text-[11px] text-slate-500">{products.length} productos publicados</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-xl">🤝</span>
+                            <div>
+                                <p className="text-xs font-bold text-slate-800 dark:text-white">Trato Directo</p>
+                                <p className="text-[11px] text-slate-500">Sin intermediarios</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
             {/* ═══════════════════════════════════════════════
@@ -478,88 +617,10 @@ export default function Show({ company, categories }) {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 flex flex-col lg:flex-row gap-10">
                 
                 {/* ───────────────────────────────────────────────
-                    COLUMNA IZQUIERDA: CARRUSEL & CATÁLOGO (2/3)
+                    COLUMNA IZQUIERDA: CATÁLOGO DE PRODUCTOS (2/3)
                    ─────────────────────────────────────────────── */}
-                <div className="lg:w-2/3 space-y-10" id="catalogo">
+                <div className="lg:w-2/3 space-y-8" id="catalogo">
                     
-                    {/* ═══════════════════════════════════════════════
-                        CARRUSEL PERSONALIZADO DE 3 IMÁGENES
-                       ═══════════════════════════════════════════════ */}
-                    <div 
-                        className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-200/90 bg-slate-900 group"
-                        onMouseEnter={() => setIsCarouselHovered(true)}
-                        onMouseLeave={() => setIsCarouselHovered(false)}
-                    >
-                        {/* Contenedor de Altura del Carrusel */}
-                        <div className="relative h-64 sm:h-80 md:h-96 w-full overflow-hidden">
-                            {carouselSlides.map((slide, idx) => (
-                                <div
-                                    key={idx}
-                                    className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                                        idx === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
-                                    }`}
-                                >
-                                    <img
-                                        src={slide.image}
-                                        alt={slide.title}
-                                        className="w-full h-full object-cover transform scale-100 group-hover:scale-105 transition-transform duration-7000 ease-out"
-                                        onError={(e) => { e.currentTarget.src = fallbackImage; }}
-                                    />
-                                    
-                                    {/* Botón flotante para compartir este flyer específico en WhatsApp */}
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedBannerKey(String(idx + 1));
-                                            setShowShareModal(true);
-                                        }}
-                                        className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950/75 hover:bg-emerald-600 text-white backdrop-blur-md text-[11px] font-bold border border-white/20 shadow-lg transition opacity-0 group-hover:opacity-100 cursor-pointer"
-                                        title="Compartir este flyer en WhatsApp"
-                                    >
-                                        <span>📲 Compartir Flyer</span>
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Flechas de Navegación del Carrusel */}
-                        <button
-                            type="button"
-                            onClick={handlePrevSlide}
-                            className="absolute left-3.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/50 hover:bg-slate-950/90 text-white backdrop-blur-xs flex items-center justify-center transition z-20 opacity-0 group-hover:opacity-100 shadow-md font-bold text-sm"
-                            title="Imagen anterior"
-                        >
-                            ❮
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={handleNextSlide}
-                            className="absolute right-3.5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-950/50 hover:bg-slate-950/90 text-white backdrop-blur-xs flex items-center justify-center transition z-20 opacity-0 group-hover:opacity-100 shadow-md font-bold text-sm"
-                            title="Siguiente imagen"
-                        >
-                            ❯
-                        </button>
-
-                        {/* Indicadores / Puntos Inferiores */}
-                        <div className="absolute bottom-5 right-6 sm:right-8 flex items-center gap-2 z-20">
-                            {carouselSlides.map((_, dotIdx) => (
-                                <button
-                                    key={dotIdx}
-                                    type="button"
-                                    onClick={() => setCurrentSlide(dotIdx)}
-                                    className={`transition-all duration-300 rounded-full ${
-                                        dotIdx === currentSlide
-                                            ? 'w-7 h-2.5 bg-blue-500 shadow-md'
-                                            : 'w-2.5 h-2.5 bg-white/50 hover:bg-white/80'
-                                    }`}
-                                    title={`Ir a imagen ${dotIdx + 1}`}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
                     {/* Encabezado del Catálogo & Barra de Herramientas B2B */}
                     <div>
                         <div className="flex items-center gap-2.5 mb-2">
