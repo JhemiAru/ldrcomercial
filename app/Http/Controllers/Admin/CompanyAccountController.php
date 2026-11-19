@@ -166,7 +166,7 @@ class CompanyAccountController extends Controller
             'user_id' => $user->id,
             'category_id' => $validated['category_id'],
             'name' => $validated['company_name'],
-            'slug' => \Illuminate\Support\Str::slug($validated['company_name']) . '-' . uniqid(),
+            'slug' => Company::generateUniqueSlug($validated['company_name']),
             'tax_id' => $validated['tax_id'] ?? null,
             'city' => $validated['city'] ?? 'Bolivia',
             'address' => $validated['address'] ?? null,

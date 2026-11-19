@@ -3,6 +3,9 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="index, follow, max-image-preview:large">
+        <meta name="geo.region" content="BO">
+        <meta name="geo.placename" content="Bolivia">
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
         <link rel="icon" type="image/png" href="/favicon.png">
@@ -13,6 +16,7 @@
             $ogTitle = config('app.name', 'LDR Comercial') . ' - Red Comercial y Catálogos en Bolivia';
             $ogDescription = 'Encuentra empresas, mayoristas, fabricantes y productos en toda Bolivia con precios y cotizaciones directas.';
             $ogImage = asset('favicon.png');
+            $companyJsonLd = null;
 
             if (isset($page['props']['company'])) {
                 $c = $page['props']['company'];
@@ -20,6 +24,9 @@
                 $cDesc = is_array($c) ? ($c['short_description'] ?? $c['description'] ?? '') : ($c->short_description ?? $c->description ?? '');
                 $cCity = is_array($c) ? ($c['city'] ?? 'Bolivia') : ($c->city ?? 'Bolivia');
                 $cId = is_array($c) ? ($c['id'] ?? 0) : ($c->id ?? 0);
+                $cAddress = is_array($c) ? ($c['address'] ?? '') : ($c->address ?? '');
+                $cPhone = is_array($c) ? ($c['phone'] ?? $c['whatsapp'] ?? '') : ($c->phone ?? $c->whatsapp ?? '');
+                $cEmail = is_array($c) ? ($c['email'] ?? '') : ($c->email ?? '');
                 $selectedBanner = request('banner', request('flyer'));
 
                 $ogTitle = "{$cName} - Catálogo Oficial en LDR Comercial";
@@ -31,11 +38,30 @@
                     $imgParams['banner'] = $selectedBanner;
                 }
                 $ogImage = route('companies.og-image', $imgParams);
+
+                $companyJsonLd = [
+                    '@context' => 'https://schema.org',
+                    '@type' => 'LocalBusiness',
+                    'name' => $cName,
+                    'description' => $ogDescription,
+                    'image' => $ogImage,
+                    'url' => $currentUrl,
+                    'telephone' => $cPhone,
+                    'email' => $cEmail,
+                    'address' => [
+                        '@type' => 'PostalAddress',
+                        'streetAddress' => $cAddress,
+                        'addressLocality' => $cCity,
+                        'addressCountry' => 'BO'
+                    ]
+                ];
             }
         @endphp
+        <link rel="canonical" href="{{ $currentUrl }}">
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ $currentUrl }}">
         <meta property="og:site_name" content="LDR Comercial">
+        <meta property="og:locale" content="es_BO">
         <meta property="og:title" content="{{ $ogTitle }}">
         <meta property="og:description" content="{{ $ogDescription }}">
         <meta property="og:image" content="{{ $ogImage }}">
@@ -50,6 +76,13 @@
         <meta name="twitter:title" content="{{ $ogTitle }}">
         <meta name="twitter:description" content="{{ $ogDescription }}">
         <meta name="twitter:image" content="{{ $ogImage }}">
+
+        @if(!empty($companyJsonLd))
+        <!-- Datos Estructurados JSON-LD Schema.org para Empresa (Google Local Business) -->
+        <script type="application/ld+json">
+        {!! json_encode($companyJsonLd, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+        </script>
+        @endif
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

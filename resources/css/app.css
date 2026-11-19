@@ -37,3 +37,15 @@ select option {
     color: #0f172a !important;
     background-color: #ffffff !important;
 }
+
+/* ═════════════════════════════════════════════════════════════════════════════════════
+   UTILIDADES PARA CARROUSELES Y SCROLL HORIZONTAL FLUIDO
+   ═════════════════════════════════════════════════════════════ */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+

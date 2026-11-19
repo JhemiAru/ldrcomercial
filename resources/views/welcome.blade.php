@@ -4,9 +4,73 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="LDR Comercial - Tu proveedor técnico y comercial para toda la industria en Bolivia. Ferretería, automatización, partes de precisión y suministros B2B.">
+    <meta name="keywords" content="proveedores industriales bolivia, ferreteria industrial, automatizacion b2b, empresas bolivia, catalogos mayoristas, suministros b2b santa cruz la paz cochabamba">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="{{ url('/') }}">
 
-    <title>LDR Comercial - One Technical Supplier for the Whole Line</title>
+    <!-- Local SEO (Bolivia) -->
+    <meta name="geo.region" content="BO">
+    <meta name="geo.placename" content="Bolivia">
+
+    <!-- Open Graph / Redes Sociales -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/') }}">
+    <meta property="og:site_name" content="LDR Comercial">
+    <meta property="og:locale" content="es_BO">
+    <meta property="og:title" content="LDR Comercial - Plataforma B2B de Proveedores Industriales y Comerciales en Bolivia">
+    <meta property="og:description" content="Encuentra empresas, mayoristas, fabricantes y productos en toda Bolivia con precios y cotizaciones directas.">
+    <meta property="og:image" content="{{ asset('favicon.png') }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="LDR Comercial - Plataforma B2B en Bolivia">
+    <meta name="twitter:description" content="Encuentra empresas, mayoristas y productos en toda Bolivia con precios y cotizaciones directas.">
+    <meta name="twitter:image" content="{{ asset('favicon.png') }}">
+
+    <title>LDR Comercial - One Technical Supplier for the Whole Line | Bolivia</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+
+    <!-- Datos Estructurados JSON-LD (Google Rich Snippets) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Organization",
+                "@id": "{{ url('/') }}/#organization",
+                "name": "LDR Comercial",
+                "url": "{{ url('/') }}",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": "{{ asset('favicon.png') }}"
+                },
+                "description": "Tu proveedor técnico y comercial para toda la industria en Bolivia. Ferretería, automatización, partes de precisión y suministros B2B.",
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressCountry": "BO"
+                }
+            },
+            {
+                "@type": "WebSite",
+                "@id": "{{ url('/') }}/#website",
+                "url": "{{ url('/') }}",
+                "name": "LDR Comercial Bolivia",
+                "description": "Plataforma B2B de Proveedores Industriales y Comerciales en Bolivia",
+                "publisher": {
+                    "@id": "{{ url('/') }}/#organization"
+                },
+                "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": {
+                        "@type": "EntryPoint",
+                        "urlTemplate": "{{ url('/empresas') }}?search={search_term_string}"
+                    },
+                    "query-input": "required name=search_term_string"
+                }
+            }
+        ]
+    }
+    </script>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,6 +110,9 @@
     </script>
 </head>
 <body class="bg-slate-50 dark:bg-[#080e1e] text-slate-800 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white transition-colors">
+
+    <!-- Encabezado Semántico H1 Principal para Google SEO (Accesible para bots y lectores) -->
+    <h1 class="sr-only">LDR Comercial - Plataforma B2B de Proveedores Industriales, Ferretería y Comercio en Bolivia</h1>
 
     <!-- ========================================================================= -->
     <!-- 1. TOP NAVBAR MODULARIZADO (resources/views/partials/navbar.blade.php) -->
@@ -151,82 +218,101 @@
                     </div>
                 </div>
 
-                <!-- COLUMNA DERECHA: 3 PRODUCTOS / OFERTAS DESTACADAS -->
-                <div class="w-full lg:w-[27%] xl:w-[25%] flex flex-col sm:grid sm:grid-cols-3 lg:flex lg:flex-col gap-3 justify-between">
-                    @forelse($sideProducts as $product)
-                        <a 
-                            href="{{ route('products.show', $product->id) }}"
-                            class="group relative flex-1 min-h-[125px] sm:min-h-[135px] lg:min-h-0 rounded-2xl overflow-hidden border border-slate-200/90 dark:border-white/10 bg-slate-900 shadow-sm hover:shadow-xl hover:border-blue-500/60 transition-all duration-300 flex flex-col justify-end cursor-pointer"
-                            title="Ver {{ $product->name }}"
-                        >
-                            <!-- Imagen de Fondo del Producto -->
-                            <div class="absolute inset-0 bg-slate-950">
-                                @if($product->main_image)
-                                    <img 
-                                        src="{{ str_starts_with($product->main_image, 'http') ? $product->main_image : asset($product->main_image) }}" 
-                                        alt="{{ $product->name }}" 
-                                        class="w-full h-full object-cover object-center opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
-                                        loading="lazy"
-                                    >
-                                @else
-                                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 text-3xl">
-                                        📦
-                                    </div>
-                                @endif
-                                <!-- Gradiente oscuro para máxima legibilidad -->
-                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 to-transparent"></div>
-                            </div>
+                <!-- COLUMNA DERECHA / SECCIÓN MÓVIL: 3 PRODUCTOS DESTACADOS -->
+                <div class="w-full lg:w-[27%] xl:w-[25%] flex flex-col justify-between">
+                    <!-- Cabecera visible únicamente en móviles para dar contexto e invitar a deslizar -->
+                    <div class="flex items-center justify-between sm:hidden mb-2 px-1">
+                        <div class="flex items-center gap-2">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                            </span>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-wide">
+                                Productos Destacados
+                            </span>
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                            Desliza <span>→</span>
+                        </span>
+                    </div>
 
-                            <!-- Badge Flotante Superior -->
-                            <div class="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5">
-                                @if($product->original_price && $product->original_price > $product->price)
-                                    @php
-                                        $descPct = round((($product->original_price - $product->price) / $product->original_price) * 100);
-                                    @endphp
-                                    <span class="px-2 py-0.5 rounded-md bg-red-600 text-white text-[10px] font-black tracking-wider uppercase shadow-xs">
-                                        -{{ $descPct }}%
-                                    </span>
-                                @else
-                                    <span class="px-2 py-0.5 rounded-md bg-blue-600/90 backdrop-blur-xs text-white text-[10px] font-bold tracking-wider uppercase shadow-xs">
-                                        Destacado
-                                    </span>
-                                @endif
-                            </div>
-
-                            <!-- Información Inferior del Producto -->
-                            <div class="relative z-10 p-3 sm:p-3.5 flex flex-col">
-                                <span class="text-[10px] font-semibold text-blue-300 dark:text-blue-400 uppercase tracking-wider truncate mb-0.5">
-                                    {{ $product->company->name ?? 'LDR Comercial' }}
-                                </span>
-                                <h3 class="text-xs sm:text-sm font-bold text-white group-hover:text-blue-300 transition-colors line-clamp-1 leading-snug">
-                                    {{ $product->name }}
-                                </h3>
-                                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-white/10">
-                                    <div class="flex items-baseline gap-1.5">
-                                        <span class="text-xs sm:text-sm font-extrabold text-amber-400">
-                                            Bs. {{ number_format($product->price, 2) }}
-                                        </span>
-                                        @if($product->original_price && $product->original_price > $product->price)
-                                            <span class="text-[10px] text-slate-400 line-through">
-                                                Bs. {{ number_format($product->original_price, 2) }}
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <span class="text-[11px] font-bold text-white/80 group-hover:text-white group-hover:translate-x-1 transition-all flex items-center gap-0.5">
-                                        Ver <span class="text-xs">→</span>
-                                    </span>
+                    <!-- Contenedor: En móvil carrusel swipe horizontal fluido; en tablet grid 3 columnas; en desktop columna vertical -->
+                    <div class="flex flex-row overflow-x-auto sm:overflow-visible no-scrollbar snap-x snap-mandatory sm:snap-none -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 lg:flex lg:flex-col gap-3 justify-between flex-1 pb-1 sm:pb-0">
+                        @forelse($sideProducts as $product)
+                            <a 
+                                href="{{ route('products.show', $product->id) }}"
+                                class="group relative w-[76vw] max-w-[280px] sm:w-auto shrink-0 snap-start flex-1 min-h-[125px] sm:min-h-[135px] lg:min-h-0 rounded-2xl overflow-hidden border border-slate-200/90 dark:border-white/10 bg-slate-900 shadow-sm hover:shadow-xl hover:border-blue-500/60 transition-all duration-300 flex flex-col justify-end cursor-pointer"
+                                title="Ver {{ $product->name }}"
+                            >
+                                <!-- Imagen de Fondo del Producto -->
+                                <div class="absolute inset-0 bg-slate-950">
+                                    @if($product->main_image)
+                                        <img 
+                                            src="{{ str_starts_with($product->main_image, 'http') ? $product->main_image : asset($product->main_image) }}" 
+                                            alt="{{ $product->name }}" 
+                                            class="w-full h-full object-cover object-center opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                                            loading="lazy"
+                                        >
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 text-3xl">
+                                            📦
+                                        </div>
+                                    @endif
+                                    <!-- Gradiente oscuro para máxima legibilidad -->
+                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/45 to-transparent"></div>
                                 </div>
-                            </div>
-                        </a>
-                    @empty
-                        <!-- Fallback si no hay productos aún -->
-                        @for($i = 1; $i <= 3; $i++)
-                            <div class="relative flex-1 min-h-[120px] rounded-2xl overflow-hidden border border-slate-200/90 dark:border-white/10 bg-gradient-to-br from-slate-900 to-slate-950 p-4 flex flex-col justify-end text-white">
-                                <span class="text-[10px] font-bold uppercase text-blue-400">Catálogo LDR</span>
-                                <p class="text-xs font-bold text-slate-200">Suministros y Productos B2B</p>
-                            </div>
-                        @endfor
-                    @endforelse
+
+                                <!-- Badge Flotante Superior -->
+                                <div class="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5">
+                                    @if($product->original_price && $product->original_price > $product->price)
+                                        @php
+                                            $descPct = round((($product->original_price - $product->price) / $product->original_price) * 100);
+                                        @endphp
+                                        <span class="px-2 py-0.5 rounded-md bg-red-600 text-white text-[10px] font-black tracking-wider uppercase shadow-xs">
+                                            -{{ $descPct }}%
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded-md bg-blue-600/90 backdrop-blur-xs text-white text-[10px] font-bold tracking-wider uppercase shadow-xs">
+                                            Destacado
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <!-- Información Inferior del Producto -->
+                                <div class="relative z-10 p-3 sm:p-3.5 flex flex-col">
+                                    <span class="text-[10px] font-semibold text-blue-300 dark:text-blue-400 uppercase tracking-wider truncate mb-0.5">
+                                        {{ $product->company->name ?? 'LDR Comercial' }}
+                                    </span>
+                                    <h3 class="text-xs sm:text-sm font-bold text-white group-hover:text-blue-300 transition-colors line-clamp-1 leading-snug">
+                                        {{ $product->name }}
+                                    </h3>
+                                    <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-white/10">
+                                        <div class="flex items-baseline gap-1.5">
+                                            <span class="text-xs sm:text-sm font-extrabold text-amber-400">
+                                                Bs. {{ number_format($product->price, 2) }}
+                                            </span>
+                                            @if($product->original_price && $product->original_price > $product->price)
+                                                <span class="text-[10px] text-slate-400 line-through">
+                                                    Bs. {{ number_format($product->original_price, 2) }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <span class="text-[11px] font-bold text-white/80 group-hover:text-white group-hover:translate-x-1 transition-all flex items-center gap-0.5">
+                                            Ver <span class="text-xs">→</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        @empty
+                            <!-- Fallback si no hay productos aún -->
+                            @for($i = 1; $i <= 3; $i++)
+                                <div class="relative w-[76vw] max-w-[280px] sm:w-auto shrink-0 snap-start flex-1 min-h-[120px] rounded-2xl overflow-hidden border border-slate-200/90 dark:border-white/10 bg-gradient-to-br from-slate-900 to-slate-950 p-4 flex flex-col justify-end text-white">
+                                    <span class="text-[10px] font-bold uppercase text-blue-400">Catálogo LDR</span>
+                                    <p class="text-xs font-bold text-slate-200">Suministros y Productos B2B</p>
+                                </div>
+                            @endfor
+                        @endforelse
+                    </div>
                 </div>
 
             </div>
@@ -542,7 +628,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($companies->take(4) as $company)
                     <a 
-                        href="{{ route('companies.show', $company->id) }}" 
+                        href="{{ route('companies.show', $company->slug ?: $company->id) }}" 
                         class="p-5 rounded-2xl border border-slate-200/90 dark:border-white/10 hover:border-blue-500/40 bg-white dark:bg-white/[0.03] hover:shadow-lg transition-all flex flex-col justify-between group"
                     >
                         <div>

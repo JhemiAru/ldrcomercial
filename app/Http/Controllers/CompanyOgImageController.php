@@ -14,7 +14,11 @@ class CompanyOgImageController extends Controller
      */
     public function show($id, Request $request, CompanyOgCardService $cardService): BinaryFileResponse
     {
-        $company = Company::with(['category'])->findOrFail($id);
+        $company = Company::with(['category'])
+            ->where(function($q) use ($id) {
+                $q->where('slug', $id)->orWhere('id', $id);
+            })
+            ->firstOrFail();
         $bannerKey = $request->query('banner', $request->query('flyer'));
 
         $imagePath = $cardService->getOrGenerateCard($company, $bannerKey);

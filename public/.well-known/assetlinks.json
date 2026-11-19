@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.ldrcomercial.app",
+      "sha256_cert_fingerprints": [
+        "63:0C:3B:80:9D:E3:E0:5E:A9:4E:C0:A7:65:A7:3E:E2:0E:81:4D:1B:4E:08:39:94:BD:33:38:9D:68:CC:E8:70"
+      ]
+    }
+  }
+]

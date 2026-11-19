@@ -134,7 +134,7 @@ export default function CompaniesIndex({ companies, categories, filters, detecte
                                     </div>
                                     <div className="pt-10 px-6 pb-6 flex-1 flex flex-col">
                                         <div className="flex items-center justify-between gap-2 mb-1">
-                                            <Link href={route('companies.show', company.id)} className="hover:underline">
+                                            <Link href={route('companies.show', company.slug || company.id)} className="hover:underline">
                                                 <h3 className="font-bold text-lg text-gray-900 line-clamp-1 group-hover:text-rose-600 transition">
                                                     {company.name}
                                                 </h3>

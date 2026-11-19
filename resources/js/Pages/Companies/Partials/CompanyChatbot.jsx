@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from '@inertiajs/react';
 
 export default function CompanyChatbot({ company }) {
+    if (!company) return null;
+
     const [isOpen, setIsOpen] = useState(false);
     const [hasInteracted, setHasInteracted] = useState(false);
     const [inputText, setInputText] = useState('');
@@ -9,12 +11,12 @@ export default function CompanyChatbot({ company }) {
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
 
-    const cleanPhone = (company.whatsapp || company.phone || '').replace(/[^0-9]/g, '');
-    const products = company.products || [];
+    const cleanPhone = (company?.whatsapp || company?.phone || '').replace(/[^0-9]/g, '');
+    const products = company?.products || [];
 
-    const googleMapsUrl = company.google_maps_link
+    const googleMapsUrl = company?.google_maps_link
         ? (company.google_maps_link.startsWith('http') ? company.google_maps_link : `https://${company.google_maps_link}`)
-        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.address || ''} ${company.city || ''} Bolivia`)}`;
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company?.address || ''} ${company?.city || ''} Bolivia`)}`;
 
     const getWhatsAppUrl = (customText) => {
         if (!cleanPhone) return '#';
@@ -457,7 +459,7 @@ export default function CompanyChatbot({ company }) {
             {/* ══════════════════════════════════════════════════════════
                 BOTÓN FLOTANTE ACTIVADOR (LAUNCHER WIDGET)
                ══════════════════════════════════════════════════════════ */}
-            <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3">
+            <div className="fixed bottom-6 right-6 z-[9999] flex items-center gap-3 pointer-events-auto">
                 {/* Tooltip / Globo de invitación cuando está cerrado */}
                 {!isOpen && !hasInteracted && (
                     <div 
@@ -500,7 +502,7 @@ export default function CompanyChatbot({ company }) {
                 VENTANA PRINCIPAL DEL CHATBOT
                ══════════════════════════════════════════════════════════ */}
             {isOpen && (
-                <div className="fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[420px] h-[580px] max-h-[82vh] rounded-3xl bg-[#080e1e] text-white border border-white/15 shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
+                <div className="fixed bottom-24 right-4 sm:right-6 z-[9999] w-[calc(100vw-2rem)] sm:w-[420px] h-[580px] max-h-[82vh] rounded-3xl bg-[#080e1e] text-white border border-white/15 shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-200">
                     
                     {/* CABECERA (HEADER) */}
                     <div className="px-4 py-3.5 bg-gradient-to-r from-blue-950 via-[#0b132b] to-indigo-950 border-b border-white/10 flex items-center justify-between shrink-0">

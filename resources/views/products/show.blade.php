@@ -4,6 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="{{ Str::limit(strip_tags($product->short_description ?? $product->description ?? $product->name), 155) }}">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="{{ route('products.show', $product->slug ?: $product->id) }}">
+
+    <!-- Local SEO (Bolivia) -->
+    <meta name="geo.region" content="BO">
+    <meta name="geo.placename" content="Bolivia">
 
     @php
         $productImg = $product->main_image 
@@ -61,6 +67,36 @@
                 }
             } catch (e) {}
         })();
+    </script>
+
+    <!-- Datos Estructurados JSON-LD Schema.org para Google Shopping y Búsquedas Enriquecidas -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": "{{ addslashes($product->name) }}",
+        "image": [
+            "{{ $productImg }}"
+        ],
+        "description": "{{ addslashes($productOgDesc) }}",
+        "sku": "PROD-{{ $product->id }}",
+        "brand": {
+            "@type": "Brand",
+            "name": "{{ addslashes($product->brand->name ?? $companyName) }}"
+        },
+        "offers": {
+            "@type": "Offer",
+            "url": "{{ route('products.show', $product->slug ?: $product->id) }}",
+            "priceCurrency": "BOB",
+            "price": "{{ number_format($product->price, 2, '.', '') }}",
+            "itemCondition": "https://schema.org/NewCondition",
+            "availability": "https://schema.org/{{ ($product->stock ?? 1) > 0 ? 'InStock' : 'OutOfStock' }}",
+            "seller": {
+                "@type": "Organization",
+                "name": "{{ addslashes($companyName) }}"
+            }
+        }
+    }
     </script>
 </head>
 <body class="bg-slate-50 dark:bg-[#080e1e] text-slate-800 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white transition-colors">
@@ -234,7 +270,7 @@
                                 </div>
 
                                 <a 
-                                    href="{{ route('companies.show', $product->company->id) }}" 
+                                    href="{{ route('companies.show', $product->company->slug ?: $product->company->id) }}" 
                                     class="shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-700 dark:hover:text-blue-300"
                                 >
                                     Ver Perfil →

@@ -374,7 +374,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     ) : company?.id ? (
                         <>
                             <Link
-                                href={route('companies.show', company.id)}
+                                href={route('companies.show', company.slug || company.id)}
                                 target="_blank"
                                 onClick={() => setIsSidebarOpen(false)}
                                 className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 border border-blue-200/80 dark:border-blue-500/20 transition group"

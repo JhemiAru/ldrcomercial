@@ -245,7 +245,7 @@ export default function ViewCompanyModal({
                     {/* Botones de Acción */}
                     <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
                         <a
-                            href={route('companies.show', company.id)}
+                            href={route('companies.show', company.slug || company.id)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5"

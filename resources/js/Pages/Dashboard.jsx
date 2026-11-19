@@ -32,7 +32,7 @@ export default function Dashboard({ company, companies = [], stats, recentProduc
             buttonText: 'Actualizar Perfil de Empresa',
             buttonLink: route('company.edit'),
             secondaryText: company?.id ? 'Ver Mi Perfil Público' : 'Ver Portal Público',
-            secondaryLink: company?.id ? route('companies.show', company.id) : route('home'),
+            secondaryLink: company?.id ? route('companies.show', company.slug || company.id) : route('home'),
             bgColor: 'from-emerald-950 via-teal-900 to-slate-900',
             accentColor: 'text-emerald-400',
             icon: '🛡️',
@@ -665,7 +665,7 @@ export default function Dashboard({ company, companies = [], stats, recentProduc
                                     <span>→</span>
                                 </Link>
                                 <Link 
-                                    href={company?.id ? route('companies.show', company.id) : route('home')} 
+                                    href={company?.id ? route('companies.show', company.slug || company.id) : route('home')} 
                                     target="_blank" 
                                     className="w-full flex items-center justify-between p-2.5 bg-black/10 dark:bg-black/20 hover:bg-black/20 dark:hover:bg-black/30 rounded-xl text-xs font-bold transition"
                                 >

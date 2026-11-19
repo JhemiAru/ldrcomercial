@@ -124,10 +124,12 @@ class CompanyController extends Controller
         }
 
         if (!$company) {
-            $validated['slug'] = Str::slug($validated['name']) . '-' . $request->user()->id;
+            $validated['slug'] = Company::generateUniqueSlug($validated['name']);
             $company = $request->user()->company()->create($validated);
         } else {
-            // Optional: update the slug if name changes, but usually we don't.
+            if (empty($company->slug)) {
+                $validated['slug'] = Company::generateUniqueSlug($validated['name'], $company->id);
+            }
             $company->update($validated);
         }
 

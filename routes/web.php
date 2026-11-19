@@ -11,6 +11,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\SearchSuggestionController;
+use App\Http\Controllers\SitemapController;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Event;
@@ -23,6 +24,21 @@ use Inertia\Inertia;
 
 // Sugerencias de búsqueda en vivo (Predictive Autocomplete)
 Route::get('/api/search/suggestions', [SearchSuggestionController::class, 'suggestions'])->name('api.search.suggestions');
+
+// Mapa del Sitio XML para Google y Motores de Búsqueda
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
+// Android App Links (Deep Linking para app com.ldrcomercial.app)
+Route::get('/.well-known/assetlinks.json', function () {
+    $path = public_path('.well-known/assetlinks.json');
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path, [
+        'Content-Type' => 'application/json',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+});
 
 // Portal Público (Vista nativa de Laravel / Blade)
 Route::get('/', function () {
@@ -111,7 +127,11 @@ Route::get('/empresas/{id}', function ($id) {
         $q->where('status', 'published')->with(['category', 'brand'])->latest();
     }, 'events' => function($q) {
         $q->where('status', 'active')->latest()->take(10);
-    }])->findOrFail($id);
+    }])
+    ->where(function($q) use ($id) {
+        $q->where('slug', $id)->orWhere('id', $id);
+    })
+    ->firstOrFail();
 
     $authUser = auth()->user();
     $isOwnerOrAdmin = $authUser && ($authUser->isAdmin() || $authUser->id === $company->user_id);

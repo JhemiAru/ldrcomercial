@@ -51,6 +51,49 @@ class Company extends Model
         'longitude' => 'float',
     ];
 
+    /**
+     * Utilizar el slug para generar rutas amigables en Laravel (con fallback al ID)
+     */
+    public function getRouteKey()
+    {
+        return $this->slug ?: $this->getKey();
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($company) {
+            if (empty($company->slug)) {
+                $company->slug = static::generateUniqueSlug($company->name);
+            }
+        });
+    }
+
+    /**
+     * Genera un slug limpio y único basado en el nombre de la empresa.
+     */
+    public static function generateUniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $baseSlug = \Illuminate\Support\Str::slug($name);
+        if (empty($baseSlug)) {
+            $baseSlug = 'empresa';
+        }
+
+        $slug = $baseSlug;
+        $counter = 1;
+
+        while (static::where('slug', $slug)->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))->exists()) {
+            $counter++;
+            $slug = "{$baseSlug}-{$counter}";
+        }
+
+        return $slug;
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

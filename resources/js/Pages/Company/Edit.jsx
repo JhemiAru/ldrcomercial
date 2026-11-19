@@ -214,7 +214,7 @@ export default function EditCompany({ company, categories = [], status }) {
 
                     {company?.id && (
                         <Link
-                            href={route('companies.show', company.id)}
+                            href={route('companies.show', company.slug || company.id)}
                             target="_blank"
                             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/20 transition self-start sm:self-auto shrink-0"
                             title="Abre la página web que ven tus clientes"
@@ -1043,7 +1043,7 @@ export default function EditCompany({ company, categories = [], status }) {
                         <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                             {company?.id && (
                                 <Link
-                                    href={route('companies.show', company.id)}
+                                    href={route('companies.show', company.slug || company.id)}
                                     target="_blank"
                                     className="px-4 py-2.5 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition"
                                 >
