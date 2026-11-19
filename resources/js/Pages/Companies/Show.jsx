@@ -39,6 +39,7 @@ export default function Show({ company, categories }) {
     const [quickMessageText, setQuickMessageText] = useState(`Hola ${company.name}, te contacto a través de LDR Comercial Bolivia. Quisiera solicitar información y cotización sobre sus productos.`);
     const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
+    const [lightboxImage, setLightboxImage] = useState(null);
 
     const triggerToast = (msg) => {
         setToastMessage(msg);
@@ -266,12 +267,14 @@ export default function Show({ company, categories }) {
             {/* ═══════════════════════════════════════════════
                 HERO STOREFRONT: BANNER DE PORTADA (ESTILO MODERNO)
                ═══════════════════════════════════════════════ */}
-            <div className="relative w-full bg-slate-900 overflow-hidden">
-                {/* Portada / Banner Panorámico en Alta Calidad */}
+            <div className="relative w-full bg-slate-950 overflow-hidden">
+                {/* Portada / Banner Panorámico en Alta Calidad y 100% Despejado */}
                 <div 
-                    className="relative w-full h-56 sm:h-72 md:h-88 lg:h-96 overflow-hidden group"
+                    className="relative w-full h-64 sm:h-80 md:h-[380px] lg:h-[440px] xl:h-[480px] overflow-hidden group cursor-pointer"
                     onMouseEnter={() => setIsCarouselHovered(true)}
                     onMouseLeave={() => setIsCarouselHovered(false)}
+                    onClick={() => setLightboxImage(carouselSlides[currentSlide]?.image)}
+                    title="Haz clic para ver el flyer en pantalla completa"
                 >
                     {carouselSlides.map((slide, idx) => (
                         <div
@@ -286,14 +289,25 @@ export default function Show({ company, categories }) {
                                 className="w-full h-full object-cover object-center" 
                                 onError={(e) => { e.currentTarget.src = fallbackImage; }}
                             />
-                            {/* Gradiente sutil inferior para contraste */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
+                            {/* Gradiente muy sutil sólo en el borde inferior para no tapar el flyer */}
+                            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
                             
-                            {/* Badge Flotante del Banner */}
+                            {/* Badge Flotante del Banner & Botón para Ver Flyer Completo */}
                             <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-                                <span className="px-3 py-1 rounded-full bg-black/50 text-white backdrop-blur-md text-[10px] font-black uppercase tracking-wider border border-white/20">
+                                <span className="px-3 py-1 rounded-full bg-black/60 text-white backdrop-blur-md text-[10px] font-black uppercase tracking-wider border border-white/20 shadow-sm">
                                     {slide.badge || 'STOREFRONT OFICIAL'}
                                 </span>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setLightboxImage(slide.image);
+                                    }}
+                                    className="px-2.5 py-1 rounded-full bg-black/60 hover:bg-black/85 text-white backdrop-blur-md text-[10px] font-bold border border-white/20 transition flex items-center gap-1 shadow-sm cursor-pointer"
+                                    title="Ver flyer en tamaño completo"
+                                >
+                                    <span>🔍 Ver Flyer</span>
+                                </button>
                             </div>
                         </div>
                     ))}
@@ -303,26 +317,35 @@ export default function Show({ company, categories }) {
                         <>
                             <button
                                 type="button"
-                                onClick={handlePrevSlide}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg cursor-pointer"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handlePrevSlide();
+                                }}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all opacity-80 sm:opacity-0 group-hover:opacity-100 shadow-lg cursor-pointer"
                                 title="Anterior"
                             >
                                 ❮
                             </button>
                             <button
                                 type="button"
-                                onClick={handleNextSlide}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/40 hover:bg-black/75 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 shadow-lg cursor-pointer"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleNextSlide();
+                                }}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/50 hover:bg-black/80 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all opacity-80 sm:opacity-0 group-hover:opacity-100 shadow-lg cursor-pointer"
                                 title="Siguiente"
                             >
                                 ❯
                             </button>
-                            <div className="absolute bottom-4 right-6 z-30 flex items-center gap-1.5">
+                            <div className="absolute bottom-4 right-6 z-30 flex items-center gap-1.5 bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-xs">
                                 {carouselSlides.map((_, dotIdx) => (
                                     <button
                                         key={dotIdx}
                                         type="button"
-                                        onClick={() => setCurrentSlide(dotIdx)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setCurrentSlide(dotIdx);
+                                        }}
                                         className={`transition-all duration-300 rounded-full ${
                                             dotIdx === currentSlide
                                                 ? 'w-6 h-2 bg-blue-500 shadow-md'
@@ -337,28 +360,28 @@ export default function Show({ company, categories }) {
             </div>
 
             {/* ═══════════════════════════════════════════════
-                TARJETA FLOTANTE DE PERFIL DEL NEGOCIO (TONO CLARO MODERNO)
+                TARJETA DE PERFIL DEL NEGOCIO (TONO CLARO MODERNO - SIN TAPAR EL FLYER)
                ═══════════════════════════════════════════════ */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-16 sm:-mt-20 z-20 mb-8">
-                <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/90 dark:border-white/10 transition-colors">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 mt-4 sm:mt-6 mb-8">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-8 shadow-xl border border-slate-200/90 dark:border-white/10 transition-colors">
                     
                     {/* Fila Superior: Logo + Badges + Suite Social */}
                     <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                         
-                        {/* Logo Flotante y Datos Principales */}
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6 text-center sm:text-left">
+                        {/* Logo y Datos Principales */}
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
                             
-                            {/* Contenedor del Logo */}
-                            <div className="w-28 h-28 sm:w-36 sm:h-36 shrink-0 bg-white dark:bg-slate-800 rounded-3xl p-2 shadow-2xl overflow-hidden border-4 border-white dark:border-slate-800 -mt-16 sm:-mt-24 relative z-30">
+                            {/* Contenedor del Logo (integrado en la cabecera sin tapar el flyer) */}
+                            <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 bg-white dark:bg-slate-800 rounded-2xl sm:rounded-3xl p-1.5 shadow-md overflow-hidden border-2 border-slate-200/90 dark:border-slate-700 relative z-30">
                                 {company.logo ? (
                                     <img 
                                         src={company.logo} 
                                         alt={company.name} 
-                                        className="w-full h-full object-cover rounded-2xl"
+                                        className="w-full h-full object-cover rounded-xl sm:rounded-2xl"
                                         onError={(e) => { e.currentTarget.src = fallbackImage; }}
                                     />
                                 ) : (
-                                    <div className="w-full h-full rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-4xl font-black text-white">
+                                    <div className="w-full h-full rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-3xl font-black text-white">
                                         {company.name.charAt(0)}
                                     </div>
                                 )}
@@ -1952,6 +1975,35 @@ export default function Show({ company, categories }) {
                 <div className="fixed bottom-6 right-6 z-50 bg-[#0b132b]/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-white/20 flex items-center gap-3">
                     <span className="text-base">✨</span>
                     <span className="text-xs sm:text-sm font-semibold">{toastMessage}</span>
+                </div>
+            )}
+
+            {/* ═══════════════════════════════════════════════
+                MODAL LIGHTBOX: VER FLYER / BANNER EN PANTALLA COMPLETA
+               ═══════════════════════════════════════════════ */}
+            {lightboxImage && (
+                <div 
+                    className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    onClick={() => setLightboxImage(null)}
+                >
+                    <div className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                        <button
+                            type="button"
+                            onClick={() => setLightboxImage(null)}
+                            className="absolute -top-12 right-0 sm:right-2 text-white hover:text-rose-400 text-3xl font-bold p-2 cursor-pointer z-50 transition"
+                            title="Cerrar vista"
+                        >
+                            ✕
+                        </button>
+                        <img 
+                            src={lightboxImage} 
+                            alt="Flyer promocional"
+                            className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/20"
+                        />
+                        <p className="text-white/70 text-xs mt-3 text-center">
+                            Toca fuera de la imagen o en la cruz para cerrar
+                        </p>
+                    </div>
                 </div>
             )}
 
