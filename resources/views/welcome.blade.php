@@ -117,6 +117,23 @@
     <!-- Encabezado Semántico H1 Principal para Google SEO (Accesible para bots y lectores) -->
     <h1 class="sr-only">LDR Comercial - Plataforma B2B de Proveedores Industriales, Ferretería y Comercio en Bolivia</h1>
 
+    <!-- SMART APP BANNER PARA DISPOSITIVOS MÓVILES (Fácil descarga o apertura en Android) -->
+    <div id="smart-app-banner" class="sm:hidden bg-[#071328] border-b border-blue-500/30 px-3.5 py-2 text-white flex items-center justify-between text-xs sticky top-0 z-50 shadow-md">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <button type="button" onclick="document.getElementById('smart-app-banner').remove();" class="text-slate-400 hover:text-white p-1 text-sm font-bold leading-none cursor-pointer" aria-label="Cerrar banner">✕</button>
+            <div class="w-8 h-8 rounded-lg bg-white p-1 shrink-0 flex items-center justify-center shadow-xs">
+                <img src="{{ asset('favicon.png') }}" alt="LDR App" class="w-full h-full object-contain">
+            </div>
+            <div class="min-w-0">
+                <div class="font-extrabold text-[11px] text-white truncate leading-tight">App LDR Comercial</div>
+                <div class="text-[10px] text-slate-300 truncate">Catálogos y cotizaciones B2B</div>
+            </div>
+        </div>
+        <a href="#descargar-app" class="ml-2 shrink-0 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-[11px] rounded-lg transition shadow-xs">
+            Descargar
+        </a>
+    </div>
+
     <!-- ========================================================================= -->
     <!-- 1. TOP NAVBAR MODULARIZADO (resources/views/partials/navbar.blade.php) -->
     <!-- ========================================================================= -->
@@ -674,7 +691,210 @@
 
 
     <!-- ========================================================================= -->
-    <!-- 6. COMUNIDAD OFICIAL EN WHATSAPP (Catálogos, Promociones y Networking B2B) -->
+    <!-- 6. BANNER APP MÓVIL ANDROID (Descarga Oficial y Acceso Móvil) -->
+    <!-- ========================================================================= -->
+    <section id="descargar-app" class="py-14 sm:py-20 bg-gradient-to-b from-slate-100 via-slate-900 to-slate-950 dark:from-[#060a16] dark:via-[#071328] dark:to-[#080e1e] relative overflow-hidden transition-colors border-b border-slate-200/80 dark:border-white/10">
+        <!-- Luces y efectos glow de fondo -->
+        <div class="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/15 dark:bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute top-1/3 right-10 w-96 h-96 bg-emerald-500/15 dark:bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="relative rounded-3xl bg-gradient-to-br from-slate-900/95 via-[#081735]/95 to-slate-950/95 border border-blue-500/30 p-7 sm:p-12 lg:p-14 shadow-2xl backdrop-blur-xl overflow-hidden">
+                
+                <!-- Destello decorativo superior -->
+                <div class="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-blue-500/20 via-transparent to-transparent pointer-events-none"></div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+                    
+                    <!-- LADO IZQUIERDO: TEXTOS, BENEFICIOS Y BOTONES (7 COLS) -->
+                    <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black tracking-wide uppercase">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                            <span>App Móvil Oficial · Android</span>
+                        </div>
+
+                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                            Lleva el Catálogo de <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-emerald-400">LDR Comercial</span> en tu Bolsillo
+                        </h2>
+
+                        <p class="text-xs sm:text-sm lg:text-base text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                            Descubre comercios, cotiza suministros en Bs. directamente por WhatsApp, ubica tiendas y ferreterías en el mapa interactivo y entérate de las mejores ofertas industriales en Bolivia.
+                        </p>
+
+                        <!-- Puntos destacados de la App -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                            <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 text-left">
+                                <span class="text-2xl">⚡</span>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">Cotizaciones</h4>
+                                    <p class="text-[11px] text-slate-400">Directo a WhatsApp</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 text-left">
+                                <span class="text-2xl">📍</span>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">Mapa GPS</h4>
+                                    <p class="text-[11px] text-slate-400">Tiendas en Bolivia</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 text-left">
+                                <span class="text-2xl">🛡️</span>
+                                <div>
+                                    <h4 class="text-xs font-bold text-white">Verificadas</h4>
+                                    <p class="text-[11px] text-slate-400">Empresas 100% reales</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción / Descarga -->
+                        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-3">
+                            <!-- Botón Google Play Style -->
+                            <a 
+                                href="https://play.google.com/store/apps/details?id=com.ldrcomercial.app" 
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-white text-slate-900 hover:bg-slate-100 font-bold transition shadow-lg hover:scale-[1.02] cursor-pointer"
+                                title="Descargar LDR Comercial en Google Play Store"
+                            >
+                                <svg class="w-7 h-7 shrink-0" viewBox="0 0 24 24" fill="none">
+                                    <path d="M3.6 1.7L13.8 12 3.6 22.3c-.4-.4-.6-1-.6-1.7V3.4c0-.7.2-1.3.6-1.7z" fill="#00C1A6"/>
+                                    <path d="M17.2 8.6L13.8 12l3.4 3.4 4-2.3c1.1-.6 1.1-1.6 0-2.3l-4-2.2z" fill="#FFC900"/>
+                                    <path d="M3.6 22.3L13.8 12l3.4 3.4-11.8 6.7c-.5.3-1 .3-1.4-.2l-4-3.6z" fill="#FF3A44"/>
+                                    <path d="M17.2 8.6L5.4 1.9C5 1.6 4.5 1.6 4 1.9l9.8 10.1 3.4-3.4z" fill="#00E676"/>
+                                </svg>
+                                <div class="text-left">
+                                    <div class="text-[9px] uppercase font-bold tracking-wider text-slate-500 leading-none">Disponible en</div>
+                                    <div class="text-sm font-black text-slate-900 leading-tight">Google Play</div>
+                                </div>
+                            </a>
+
+                            <!-- Botón Descargar APK Directo -->
+                            <a 
+                                href="{{ asset('app-ldrcomercial.apk') }}" 
+                                download="ldrcomercial.apk"
+                                class="inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-sm transition hover:scale-[1.02] cursor-pointer shadow-md"
+                                title="Descargar APK instalador para Android"
+                            >
+                                <span class="text-lg">🤖</span>
+                                <div class="text-left">
+                                    <div class="text-[9px] uppercase font-bold tracking-wider text-slate-400 leading-none">Instalador Directo</div>
+                                    <div class="text-sm font-bold text-white leading-tight">Descargar APK</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- LADO DERECHO: MOCKUP SMARTPHONE 3D (5 COLS) -->
+                    <div class="lg:col-span-5 flex justify-center">
+                        <div class="relative w-[270px] sm:w-[290px] rounded-[42px] border-[6px] border-slate-700/80 bg-slate-950 p-2 shadow-2xl shadow-blue-500/20 ring-1 ring-white/20 select-none">
+                            
+                            <!-- Notch / Parlante superior -->
+                            <div class="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-4 bg-slate-900 rounded-full z-30 flex items-center justify-center">
+                                <div class="w-3 h-3 rounded-full bg-slate-950 mr-2"></div>
+                                <div class="w-10 h-1 bg-slate-800 rounded-full"></div>
+                            </div>
+
+                            <!-- Pantalla del Celular con la App LDR Comercial -->
+                            <div class="rounded-[34px] overflow-hidden bg-[#08162b] text-white flex flex-col h-[460px] relative border border-white/5">
+                                
+                                <!-- Header de la App Móvil -->
+                                <div class="pt-6 pb-2.5 px-3.5 bg-[#08162b] border-b border-white/10">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-7 h-7 rounded-full bg-white flex items-center justify-center p-1 shadow-xs">
+                                                <img src="{{ asset('favicon.png') }}" alt="Logo" class="w-full h-full object-contain">
+                                            </div>
+                                            <div>
+                                                <div class="text-xs font-black tracking-tight leading-tight">LDR Comercial</div>
+                                                <div class="text-[9px] text-slate-400">Explora comercios y ofertas</div>
+                                            </div>
+                                        </div>
+                                        <div class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px]">
+                                            👤
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Buscador de la App -->
+                                    <div class="mt-2 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white text-slate-800 text-[10px] shadow-inner">
+                                        <span>🔍</span>
+                                        <span class="text-slate-400">Buscar productos o tiendas...</span>
+                                    </div>
+                                </div>
+
+                                <!-- Contenido de la Pantalla -->
+                                <div class="p-3 space-y-2.5 flex-1 overflow-hidden">
+                                    <!-- Mini Banner -->
+                                    <div class="h-24 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-slate-900 p-2.5 flex flex-col justify-end relative overflow-hidden shadow-md">
+                                        <span class="text-[8px] font-black uppercase text-amber-300">Suministros Industriales</span>
+                                        <span class="text-[11px] font-black leading-tight text-white">Catálogos B2B con Precios</span>
+                                        <span class="text-[8px] text-slate-200 mt-0.5">Entregas en toda Bolivia</span>
+                                    </div>
+
+                                    <!-- Grid 2 Columnas de Productos -->
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div class="p-2 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col justify-between">
+                                            <div class="h-14 rounded-lg bg-slate-800 flex items-center justify-center text-xl">
+                                                💻
+                                            </div>
+                                            <div class="mt-1.5">
+                                                <div class="text-[9px] font-bold text-white truncate">Laptop Corporativa</div>
+                                                <div class="text-[10px] font-extrabold text-amber-400">Bs. 7,450</div>
+                                            </div>
+                                        </div>
+                                        <div class="p-2 rounded-xl bg-slate-900/90 border border-white/10 flex flex-col justify-between">
+                                            <div class="h-14 rounded-lg bg-slate-800 flex items-center justify-center text-xl">
+                                                ⚙️
+                                            </div>
+                                            <div class="mt-1.5">
+                                                <div class="text-[9px] font-bold text-white truncate">Servidor Rackeable</div>
+                                                <div class="text-[10px] font-extrabold text-amber-400">Bs. 18,500</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Barra Inferior de Navegación Móvil (MenuBar) -->
+                                <div class="py-2 px-4 bg-[#050e1d] border-t border-white/10 flex items-center justify-around text-[9px] font-bold text-slate-400">
+                                    <div class="flex flex-col items-center text-blue-400">
+                                        <span>🏠</span>
+                                        <span class="text-[8px]">Inicio</span>
+                                    </div>
+                                    <div class="flex flex-col items-center">
+                                        <span>🔍</span>
+                                        <span class="text-[8px]">Buscar</span>
+                                    </div>
+                                    <div class="flex flex-col items-center">
+                                        <span>🗺️</span>
+                                        <span class="text-[8px]">Mapa</span>
+                                    </div>
+                                    <div class="flex flex-col items-center">
+                                        <span>⚽</span>
+                                        <span class="text-[8px]">Eventos</span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Insignias Flotantes alrededor del teléfono -->
+                            <div class="absolute -top-3 -right-4 bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg flex items-center gap-1 border border-white/30 animate-bounce">
+                                <span>✓</span>
+                                <span>App Oficial</span>
+                            </div>
+
+                            <div class="absolute -bottom-3 -left-4 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1 border border-white/30">
+                                <span>⭐</span>
+                                <span>4.9 Bolivia</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 7. COMUNIDAD OFICIAL EN WHATSAPP (Catálogos, Promociones y Networking B2B) -->
     <!-- ========================================================================= -->
     <section id="comunidad-whatsapp" class="py-16 sm:py-20 bg-gradient-to-b from-slate-50 via-emerald-50/30 to-slate-50 dark:from-[#080e1e] dark:via-[#091b19]/40 dark:to-[#080e1e] border-b border-slate-200/80 dark:border-white/10 transition-colors relative overflow-hidden">
         
